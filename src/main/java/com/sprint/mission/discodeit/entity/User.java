@@ -1,8 +1,10 @@
 package com.sprint.mission.discodeit.entity;
 
+import java.io.Serializable;
 import java.util.UUID;
 
-public class User {
+public class User implements Serializable {
+    private static final long serialVersionUID = 1L; // 직렬화 버전 고유 식별자
     private final UUID id;
     private final Long createdAt;
     private Long updatedAt;
@@ -22,6 +24,7 @@ public class User {
         this.password = password;
         this.statusMessage = "오프라인";
     }
+
 
     public UUID getId() {
         return id;
