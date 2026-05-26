@@ -54,7 +54,8 @@ public class User implements Serializable {
         return statusMessage;
     }
 
-    public void update(String username, String password, String statusMessage) {
+    public void update(String email, String username, String password, String statusMessage) {
+        this.email = email;
         this.username = username;
         this.password = password;
         this.statusMessage = statusMessage;

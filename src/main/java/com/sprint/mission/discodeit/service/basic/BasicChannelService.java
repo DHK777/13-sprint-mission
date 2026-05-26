@@ -1,49 +1,48 @@
-package com.sprint.mission.discodeit.service.jcf;
+package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
+import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
-public class JCFChannelService implements ChannelService {
-    private final Map<UUID, Channel> data;
+public class BasicChannelService implements ChannelService {
+    private final ChannelRepository channelRepository;
 
-    public JCFChannelService() {
-        this.data = new HashMap<>();
+    public BasicChannelService(ChannelRepository channelRepository) {
+        this.channelRepository = channelRepository;
     }
 
     @Override
     public Channel create(Channel channel) {
-        data.put(channel.getId(), channel);
+        channelRepository.save(channel);
         return channel;
     }
 
     @Override
     public Channel read(UUID id) {
-        return data.get(id);
+        return channelRepository.findById(id);
     }
 
     @Override
     public List<Channel> readAll() {
-        return new ArrayList<>(data.values());
+        return channelRepository.findAll();
     }
 
     @Override
     public Channel update(UUID id, String name, ChannelType type, String description) {
-        Channel channel = data.get(id);
+        Channel channel = channelRepository.findById(id);
         if (channel != null) {
             channel.update(name, type, description);
+            channelRepository.save(channel);
         }
         return channel;
     }
 
     @Override
     public void delete(UUID id) {
-        data.remove(id);
+        channelRepository.delete(id);
     }
 }

@@ -4,18 +4,26 @@ import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.service.ChannelService;
-import com.sprint.mission.discodeit.service.MessageService;
-import com.sprint.mission.discodeit.service.UserService;
-import com.sprint.mission.discodeit.service.jcf.JCFChannelService;
-import com.sprint.mission.discodeit.service.jcf.JCFMessageService;
-import com.sprint.mission.discodeit.service.jcf.JCFUserService;
+import com.sprint.mission.discodeit.repository.*;
+import com.sprint.mission.discodeit.repository.file.*;
+import com.sprint.mission.discodeit.repository.file.FileUserRepository;
+import com.sprint.mission.discodeit.repository.jcf.*;
+import com.sprint.mission.discodeit.service.*;
+import com.sprint.mission.discodeit.service.basic.*;
 
 public class JavaApplication {
     public static void main(String[] args) {
-        UserService userService = new JCFUserService();
-        ChannelService channelService = new JCFChannelService();
-        MessageService messageService = new JCFMessageService();
+        UserRepository userRepository = new FileUserRepository();
+        ChannelRepository channelRepository = new FileChannelRepository();
+        MessageRepository messageRepository = new FileMessageRepository();
+
+//        UserRepository userRepository = new JCFUserRepository();
+//        ChannelRepository channelRepository = new JCFChannelRepository();
+//        MessageRepository messageRepository = new JCFMessageRepository();
+
+        UserService userService = new BasicUserService(userRepository);
+        ChannelService channelService = new BasicChannelService(channelRepository);
+        MessageService messageService = new BasicMessageService(messageRepository);
 
         System.out.println("====== 테스트 시작 ======\n");
 
@@ -50,8 +58,8 @@ public class JavaApplication {
         System.out.println("[3] 데이터 수정");
 
         // 1. 유저 정보 수정
-        userService.update(user1.getId(), "백엔드개발자",
-                "world@discord.com", "new_password");
+        userService.update(user1.getId(), "world@discord.com",
+                "백엔드개발자", "new_password", "개발중");
         // 2. 채널 정보 수정
         channelService.update(channel1.getId(), "백엔드-잡담",
                 ChannelType.PUBLIC, "설명이 수정되었습니다.");
@@ -75,7 +83,7 @@ public class JavaApplication {
         System.out.println("[채널]");
         System.out.println(" -> 변경 후 이름: " + updatedChannel.getName());
         System.out.println(" -> 생성 시간(createdAt): " + updatedChannel.getCreatedAt());
-        System.out.println(" -> 생정 시간(updatedAt): " + updatedChannel.getUpdatedAt() + "\n");
+        System.out.println(" -> 생성 시간(updatedAt): " + updatedChannel.getUpdatedAt() + "\n");
 
         // 3. 수정된 메시지 검증
         Message updatedMessage = messageService.read(message1.getId());
