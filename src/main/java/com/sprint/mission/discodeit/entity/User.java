@@ -1,8 +1,11 @@
 package com.sprint.mission.discodeit.entity;
 
+import lombok.Getter;
+
 import java.io.Serializable;
 import java.util.UUID;
 
+@Getter
 public class User implements Serializable {
     private static final long serialVersionUID = 1L; // 직렬화 버전 고유 식별자
     private final UUID id;
@@ -23,35 +26,6 @@ public class User implements Serializable {
         this.username = username;
         this.password = password;
         this.statusMessage = "오프라인";
-    }
-
-
-    public UUID getId() {
-        return id;
-    }
-
-    public Long getCreatedAt() {
-        return createdAt;
-    }
-
-    public Long getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getStatusMessage() {
-        return statusMessage;
     }
 
     public void update(String email, String username, String password, String statusMessage) {
