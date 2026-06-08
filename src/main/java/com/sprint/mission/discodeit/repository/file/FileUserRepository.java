@@ -8,7 +8,6 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 
-@Repository
 public class FileUserRepository implements UserRepository {
     private static final String FILE_PATH_STR = "users.dat";
 
@@ -57,5 +56,15 @@ public class FileUserRepository implements UserRepository {
         Map<UUID, User> data = loadData();
         data.remove(id);
         saveData(data);
+    }
+
+    @Override
+    public boolean existsByUsername(String username) {
+        return false;
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return false;
     }
 }

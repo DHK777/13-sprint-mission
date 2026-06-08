@@ -9,4 +9,7 @@ public interface UserRepository {
     User findById(UUID id);
     List<User> findAll();
     void delete(UUID id);
+
+    boolean existsByUsername(String username);
+    boolean existsByEmail(String email);
 }

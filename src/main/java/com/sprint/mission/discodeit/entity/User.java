@@ -37,4 +37,9 @@ public class User implements Serializable {
         this.statusMessage = statusMessage;
         this.updatedAt = Instant.now();
     }
+
+    public void updateProfile(UUID profileId) {
+        this.profileId = profileId;
+        this.updatedAt = Instant.now();
+    }
 }

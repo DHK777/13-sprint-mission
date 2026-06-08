@@ -8,7 +8,6 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 
-@Repository
 public class FileMessageRepository implements MessageRepository {
     private static final String FILE_PATH_STR = "messages.dat"; // 메시지 전용 창고
 
