@@ -44,4 +44,13 @@ public class JCFUserRepository implements UserRepository {
         return data.values().stream()
                 .anyMatch(user -> user.getEmail().equals(email));
     }
+
+    @Override
+    public User findByUsername(String username) {
+        // 맵을 싹 뒤져서 이름이 똑같은 유저를 찾아서 뱉음 (없으면 null)
+        return data.values().stream()
+                .filter(user -> user.getUsername().equals(username))
+                .findFirst()
+                .orElse(null);
+    }
 }

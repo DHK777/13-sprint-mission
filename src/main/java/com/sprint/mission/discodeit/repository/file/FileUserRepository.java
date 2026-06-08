@@ -67,4 +67,9 @@ public class FileUserRepository implements UserRepository {
     public boolean existsByEmail(String email) {
         return false;
     }
+
+    @Override
+    public User findByUsername(String username) {
+        return null;
+    }
 }
