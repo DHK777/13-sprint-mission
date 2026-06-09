@@ -5,6 +5,7 @@ import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -28,5 +29,20 @@ public class JCFUserStatusRepository implements UserStatusRepository {
     @Override
     public void deleteByUserId(UUID userId) {
         store.values().removeIf(status -> status.getUserId().equals(userId));
+    }
+
+    @Override
+    public UserStatus findById(UUID id) {
+        return store.get(id);
+    }
+
+    @Override
+    public List<UserStatus> findAll() {
+        return store.values().stream().toList();
+    }
+
+    @Override
+    public void delete(UUID id) {
+        store.remove(id);
     }
 }
