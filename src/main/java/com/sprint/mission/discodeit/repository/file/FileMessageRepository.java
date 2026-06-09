@@ -51,4 +51,13 @@ public class FileMessageRepository implements MessageRepository {
         data.remove(id);
         saveData(data);
     }
+
+    @Override
+    public List<Message> findByChannelId(UUID channelId) {
+        return List.of();
+    }
+
+    @Override
+    public void deleteByChannelId(UUID channelId) {
+    }
 }

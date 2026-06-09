@@ -10,14 +10,14 @@ import java.util.UUID;
 
 @Repository
 public class JCFBinaryContentRepository implements BinaryContentRepository {
-    private final Map<UUID, BinaryContent> data = new HashMap<>();
+    private final Map<UUID, BinaryContent> store = new HashMap<>();
 
     @Override
     public void save(BinaryContent binaryContent) {
-        data.put(binaryContent.getId(), binaryContent);
+        store.put(binaryContent.getId(), binaryContent);
     }
     @Override
     public void deleteById(UUID id) {
-        data.remove(id);
+        store.remove(id);
     }
 }

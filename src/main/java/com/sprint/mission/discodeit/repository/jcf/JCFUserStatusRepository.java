@@ -10,16 +10,16 @@ import java.util.UUID;
 
 @Repository
 public class JCFUserStatusRepository implements UserStatusRepository {
-    private final Map<UUID, UserStatus> data = new HashMap<>();
+    private final Map<UUID, UserStatus> store = new HashMap<>();
 
     @Override
     public void save(UserStatus userStatus) {
-        data.put(userStatus.getId(), userStatus);
+        store.put(userStatus.getId(), userStatus);
     }
 
     @Override
     public UserStatus findByUserId(UUID userId) {
-        return data.values().stream()
+        return store.values().stream()
                 .filter(status -> status.getUserId().equals(userId))
                 .findFirst()
                 .orElse(null);
@@ -27,6 +27,6 @@ public class JCFUserStatusRepository implements UserStatusRepository {
 
     @Override
     public void deleteByUserId(UUID userId) {
-        data.values().removeIf(status -> status.getUserId().equals(userId));
+        store.values().removeIf(status -> status.getUserId().equals(userId));
     }
 }

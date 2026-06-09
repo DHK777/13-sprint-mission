@@ -8,25 +8,37 @@ import java.util.*;
 
 @Repository
 public class JCFMessageRepository implements MessageRepository {
-    private final Map<UUID, Message> data = new HashMap<>();
+    private final Map<UUID, Message> store = new HashMap<>();
 
     @Override
     public void save(Message message) {
-        data.put(message.getId(), message);
+        store.put(message.getId(), message);
     }
 
     @Override
     public Message findById(UUID id) {
-        return data.get(id);
+        return store.get(id);
     }
 
     @Override
     public List<Message> findAll() {
-        return new ArrayList<>(data.values());
+        return new ArrayList<>(store.values());
     }
 
     @Override
     public void delete(UUID id) {
-        data.remove(id);
+        store.remove(id);
+    }
+
+    @Override
+    public List<Message> findByChannelId(UUID channelId) {
+        return store.values().stream()
+                .filter(message -> message.getChannelId().equals(channelId))
+                .toList();
+    }
+
+    @Override
+    public void deleteByChannelId(UUID channelId) {
+        store.values().removeIf(message -> message.getChannelId().equals(channelId));
     }
 }
