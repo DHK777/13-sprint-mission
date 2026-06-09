@@ -37,8 +37,12 @@ public class DiscodeitApplication {
                 "개발-잡담", "개발자와 개발 관련 이야기를 나누는 채널입니다."));
 
         // 생성된 유저와 채널의 ID를 활용하여 메시지 작성
-        Message message1 = messageService.create(new Message(channel1.getId(),
-                user1.id(), "안녕하세요, 첫 메시지입니다!"));
+        Message message1 = messageService.create(new MessageCreateRequest(
+                channel1.getId(),
+                user1.id(),
+                "안녕하세요, 첫 메시지입니다!",
+                null
+        ));
         System.out.println(" -> 메시지 작성 완료: " + message1.getContent() + "\n");
 
         // --- [2] 데이터 조회 (단건, 다건) ---
@@ -55,7 +59,7 @@ public class DiscodeitApplication {
         System.out.println(" [다건 조회]");
         System.out.println(" -> 총 유저 수: " + userService.findAll().size());
         System.out.println(" -> 총 채널 수: " + channelService.findAllByUserId(user1.id()).size());
-        System.out.println(" -> 총 메시지 수: " + messageService.readAll().size() + "\n");
+        System.out.println(" -> 총 메시지 수: " + messageService.findAllByChannelId(channel1.getId()).size() + "\n");
 
         // --- [3] 데이터 수정 ---
         System.out.println("[3] 데이터 수정");
@@ -71,7 +75,7 @@ public class DiscodeitApplication {
         channelService.update(channel1.getId(), new ChannelUpdateRequest(
                 "백엔드-잡담", ChannelType.PUBLIC, "설명이 수정되었습니다."));
         // 3. 메시지 내용 수정
-        messageService.update(message1.getId(), "내용을 수정했습니다");
+        messageService.update(message1.getId(), new MessageUpdateRequest("내용을 수정했습니다"));
         System.out.println(" -> 유저, 채널, 메시지 수정 실행 완료");
 
         // --- [4] 수정된 데이터 조회 ---
