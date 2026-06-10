@@ -26,10 +26,10 @@ public class BasicMessageService implements MessageService {
 
     @Override
     public Message create(MessageCreateRequest request) {
-        if (channelRepository.findById(request.channelId()) == null) {
+        if (channelRepository.findById(request.channelId()).isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 채널입니다.");
         }
-        if (userRepository.findById(request.senderId()) == null) {
+        if (userRepository.findById(request.senderId()).isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 유저입니다.");
         }
 
@@ -48,7 +48,8 @@ public class BasicMessageService implements MessageService {
 
     @Override
     public Message read(UUID id) {
-        return messageRepository.findById(id);
+        return messageRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("메시지를 찾을 수 없습니다."));
     }
 
     @Override
@@ -58,10 +59,8 @@ public class BasicMessageService implements MessageService {
 
     @Override
     public Message update(UUID id, MessageUpdateRequest request) {
-        Message message = messageRepository.findById(id);
-        if (message == null) {
-            throw new IllegalArgumentException("수정할 메시지를 찾을 수 없습니다.");
-        }
+        Message message = messageRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("수정할 메시지를 찾을 수 없습니다."));
         message.update(request.content());
         messageRepository.save(message);
         return message;
@@ -69,14 +68,10 @@ public class BasicMessageService implements MessageService {
 
     @Override
     public void delete(UUID id) {
-        Message message = messageRepository.findById(id);
-        if (message == null) {
-            throw new IllegalArgumentException("삭제할 메시지를 찾을 수 없습니다.");
-        }
-        if (message.getAttachmentIds() != null) {
-            for (UUID fileId : message.getAttachmentIds()) {
-                binaryContentRepository.deleteById(fileId);
-            }
+        Message message = messageRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("삭제할 메시지를 찾을 수 없습니다."));
+        for (UUID fileId : message.getAttachmentIds()) {
+            binaryContentRepository.deleteById(fileId);
         }
         messageRepository.delete(id);
     }

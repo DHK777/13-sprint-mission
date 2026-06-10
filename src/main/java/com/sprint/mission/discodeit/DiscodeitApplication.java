@@ -124,7 +124,14 @@ public class DiscodeitApplication {
             channelDeleted = true;
         }
 
-        if (messageService.read(message1.getId()) == null && userDeleted && channelDeleted) {
+        boolean messageDeleted = false;
+        try {
+            messageService.read(message1.getId());
+        } catch (IllegalArgumentException e) {
+            messageDeleted = true;
+        }
+
+        if (messageDeleted && userDeleted && channelDeleted) {
             System.out.println(" -> 테스트 성공: 모든 데이터가 정상적으로 삭제되었습니다.\n");
         } else {
             System.out.println(" -> 테스트 실패: 삭제되지 않은 데이터가 남아있습니다.\n");

@@ -20,11 +20,11 @@ public class BasicUserStatusService implements UserStatusService {
 
     @Override
     public UserStatus create(UserStatusCreateRequest request) {
-        if (userRepository.findById(request.userId()) == null) {
+        if (userRepository.findById(request.userId()).isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 유저입니다.");
         }
 
-        if (userStatusRepository.findByUserId(request.userId()) != null) {
+        if (userStatusRepository.findByUserId(request.userId()).isPresent()) {
             throw new IllegalArgumentException("해당 유저의 상태 정보가 이미 존재합니다.");
         }
 
@@ -36,11 +36,8 @@ public class BasicUserStatusService implements UserStatusService {
 
     @Override
     public UserStatus find(UUID id) {
-        UserStatus status = userStatusRepository.findById(id);
-        if (status == null) {
-            throw new IllegalArgumentException("상태 정보를 찾을 수 없습니다.");
-        }
-        return status;
+        return userStatusRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("상태 정보를 찾을 수 없습니다."));
     }
 
     @Override
@@ -58,10 +55,8 @@ public class BasicUserStatusService implements UserStatusService {
 
     @Override
     public UserStatus updateByUserId(UUID userId, UserStatusUpdateRequest request) {
-        UserStatus status = userStatusRepository.findByUserId(userId);
-        if (status == null) {
-            throw new IllegalArgumentException("해당 유저의 상태 정보를 찾을 수 없습니다.");
-        }
+        UserStatus status = userStatusRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 유저의 상태 정보를 찾을 수 없습니다."));
 
         status.updateActivity();
         userStatusRepository.save(status);

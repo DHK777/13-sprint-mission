@@ -4,10 +4,7 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Repository
 public class JCFBinaryContentRepository implements BinaryContentRepository {
@@ -30,7 +27,7 @@ public class JCFBinaryContentRepository implements BinaryContentRepository {
     }
 
     @Override
-    public BinaryContent findById(UUID id) {
-        return store.get(id);
+    public Optional<BinaryContent> findById(UUID id) {
+        return Optional.ofNullable(store.get(id));
     }
 }

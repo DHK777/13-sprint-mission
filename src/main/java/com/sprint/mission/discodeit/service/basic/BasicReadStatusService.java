@@ -22,15 +22,14 @@ public class BasicReadStatusService implements ReadStatusService {
 
     @Override
     public ReadStatus create(ReadStatusCreateRequest request) {
-        if (channelRepository.findById(request.channelId()) == null) {
+        if (channelRepository.findById(request.channelId()).isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 채널입니다.");
         }
-        if (userRepository.findById(request.userId()) == null) {
+        if (userRepository.findById(request.userId()).isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 유저입니다.");
         }
 
-        ReadStatus existingStatus = readStatusRepository.findByChannelIdAndUserId(request.channelId(), request.userId());
-        if (existingStatus != null) {
+        if (readStatusRepository.findByChannelIdAndUserId(request.channelId(), request.userId()).isPresent()) {
             throw new IllegalArgumentException("해당 유저는 이미 이 채널의 읽음 상태를 가지고 있습니다.");
         }
 
@@ -41,11 +40,8 @@ public class BasicReadStatusService implements ReadStatusService {
 
     @Override
     public ReadStatus find(UUID id) {
-        ReadStatus readStatus = readStatusRepository.findById(id);
-        if (readStatus == null) {
-            throw new IllegalArgumentException("상태창을 찾을 수 없습니다.");
-        }
-        return readStatus;
+        return readStatusRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("상태창을 찾을 수 없습니다."));
     }
 
     @Override

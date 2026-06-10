@@ -4,10 +4,7 @@ import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Repository
 public class JCFReadStatusRepository implements ReadStatusRepository {
@@ -38,8 +35,8 @@ public class JCFReadStatusRepository implements ReadStatusRepository {
     }
 
     @Override
-    public ReadStatus findById(UUID id) {
-        return store.get(id);
+    public Optional<ReadStatus> findById(UUID id) {
+        return Optional.ofNullable(store.get(id));
     }
 
     @Override
@@ -48,10 +45,9 @@ public class JCFReadStatusRepository implements ReadStatusRepository {
     }
 
     @Override
-    public ReadStatus findByChannelIdAndUserId(UUID channelId, UUID userId) {
+    public Optional<ReadStatus> findByChannelIdAndUserId(UUID channelId, UUID userId) {
         return store.values().stream()
                 .filter(rs -> rs.getChannelId().equals(channelId) && rs.getUserId().equals(userId))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 }

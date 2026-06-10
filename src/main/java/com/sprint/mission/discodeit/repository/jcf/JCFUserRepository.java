@@ -17,8 +17,8 @@ public class JCFUserRepository implements UserRepository {
     }
 
     @Override
-    public User findById(UUID id) {
-        return store.get(id);
+    public Optional<User> findById(UUID id) {
+        return Optional.ofNullable(store.get(id));
     }
 
     @Override
@@ -46,11 +46,9 @@ public class JCFUserRepository implements UserRepository {
     }
 
     @Override
-    public User findByUsername(String username) {
-        // 맵을 싹 뒤져서 이름이 똑같은 유저를 찾아서 뱉음 (없으면 null)
+    public Optional<User> findByUsername(String username) {
         return store.values().stream()
                 .filter(user -> user.getUsername().equals(username))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 }

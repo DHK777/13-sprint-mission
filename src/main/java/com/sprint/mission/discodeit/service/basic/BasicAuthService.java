@@ -18,20 +18,19 @@ public class BasicAuthService implements AuthService {
 
     @Override
     public UserResponse login(LoginRequest request) {
-        User user = userRepository.findByUsername(request.username());
+        User user = userRepository.findByUsername(request.username())
+                .orElseThrow(() -> new IllegalArgumentException("아이디 또는 비밀번호가 일치하지 않습니다."));
 
-        if (user == null || !user.getPassword().equals(request.password())) {
+        if (!user.getPassword().equals(request.password())) {
             throw new IllegalArgumentException("아이디 또는 비밀번호가 일치하지 않습니다.");
         }
 
-        UserStatus userStatus = userStatusRepository.findByUserId(user.getId());
-        boolean isOnline = (userStatus != null) && userStatus.isOnline();
+        boolean isOnline = userStatusRepository.findByUserId(user.getId())
+                .map(UserStatus::isOnline).orElse(false);
 
-        return new UserResponse(
-                user.getId(),
+        return new UserResponse(user.getId(),
                 user.getEmail(),
                 user.getUsername(),
-                isOnline
-        );
+                isOnline);
     }
 }

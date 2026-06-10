@@ -57,10 +57,8 @@ public class BasicChannelService implements ChannelService {
 
     @Override
     public ChannelResponse find(UUID id) {
-        Channel channel = channelRepository.findById(id);
-        if (channel == null) {
-            throw new IllegalArgumentException("채널을 찾을 수 없습니다.");
-        }
+        Channel channel = channelRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("채널을 찾을 수 없습니다."));
 
         List<Message> messages = messageRepository.findByChannelId(id);
         Instant lastMessageTime = null;
@@ -109,10 +107,8 @@ public class BasicChannelService implements ChannelService {
 
     @Override
     public ChannelResponse update(UUID id, ChannelUpdateRequest request) {
-        Channel channel = channelRepository.findById(id);
-        if (channel == null) {
-            throw new IllegalArgumentException("수정할 채널을 찾을 수 없습니다.");
-        }
+        Channel channel = channelRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("수정할 채널을 찾을 수 없습니다."));
 
         if (channel.getType() == ChannelType.PRIVATE) {
             throw new IllegalArgumentException("PRIVATE 채널은 수정할 수 없습니다.");
@@ -125,10 +121,8 @@ public class BasicChannelService implements ChannelService {
 
     @Override
     public void delete(UUID id) {
-        Channel channel = channelRepository.findById(id);
-        if (channel == null) {
-            throw new IllegalArgumentException("삭제할 채널을 찾을 수 없습니다.");
-        }
+        channelRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("삭제할 채널을 찾을 수 없습니다."));
 
         messageRepository.deleteByChannelId(id);
         readStatusRepository.deleteByChannelId(id);

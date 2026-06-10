@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.repository;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface ReadStatusRepository {
@@ -12,7 +13,7 @@ public interface ReadStatusRepository {
     List<ReadStatus> findByUserId(UUID userId);
     void deleteByChannelId(UUID channelId);
 
-    ReadStatus findById(UUID id);
+    Optional<ReadStatus> findById(UUID id);
     void delete(UUID id);
-    ReadStatus findByChannelIdAndUserId(UUID channelId, UUID userId);
+    Optional<ReadStatus> findByChannelIdAndUserId(UUID channelId, UUID userId);
 }

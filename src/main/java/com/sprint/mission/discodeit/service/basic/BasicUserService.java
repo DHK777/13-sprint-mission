@@ -59,14 +59,11 @@ public class BasicUserService implements UserService {
 
     @Override
     public UserResponse find(UUID id) {
-        User user = userRepository.findById(id);
-        if (user == null) {
-            throw new IllegalArgumentException("해당 유저를 찾을 수 없습니다.");
-        }
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 유저를 찾을 수 없습니다."));
 
-        UserStatus userStatus = userStatusRepository.findByUserId(id);
-
-        boolean isOnline = (userStatus != null) && userStatus.isOnline();
+        boolean isOnline = userStatusRepository.findByUserId(id)
+                .map(UserStatus::isOnline).orElse(false);
 
         return new UserResponse(
                 user.getId(),
@@ -80,8 +77,9 @@ public class BasicUserService implements UserService {
     public List<UserResponse> findAll() {
         List<User> users = userRepository.findAll();
         return users.stream().map(user -> {
-            UserStatus userStatus = userStatusRepository.findByUserId(user.getId());
-            boolean isOnline = (userStatus != null) && userStatus.isOnline();
+            boolean isOnline = userStatusRepository.findByUserId(user.getId())
+                    .map(UserStatus::isOnline).orElse(false);
+
             return new UserResponse(
                     user.getId(),
                     user.getEmail(),
@@ -94,10 +92,8 @@ public class BasicUserService implements UserService {
     @Override
     public UserResponse update(UUID id, UserUpdateRequest request) {
 
-        User user = userRepository.findById(id);
-        if (user == null) {
-            throw new IllegalArgumentException("수정할 유저를 찾을 수 없습니다.");
-        }
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("수정할 유저를 찾을 수 없습니다."));
 
         user.update(
                 request.email(),
@@ -118,23 +114,19 @@ public class BasicUserService implements UserService {
 
         userRepository.save(user);
 
-        UserStatus userStatus = userStatusRepository.findByUserId(user.getId());
-        boolean isOnline = (userStatus != null) && userStatus.isOnline();
+        boolean isOnline = userStatusRepository.findByUserId(user.getId())
+                .map(UserStatus::isOnline).orElse(false);
 
-        return new UserResponse(
-                user.getId(),
+        return new UserResponse(user.getId(),
                 user.getEmail(),
                 user.getUsername(),
-                isOnline
-        );
+                isOnline);
     }
 
     @Override
     public void delete(UUID id) {
-        User user = userRepository.findById(id);
-        if (user == null) {
-            throw new IllegalArgumentException("삭제할 유저를 찾을 수 없습니다.");
-        }
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("삭제할 유저를 찾을 수 없습니다."));
 
         if (user.getProfileId() != null) {
             binaryContentRepository.deleteById(user.getProfileId());
