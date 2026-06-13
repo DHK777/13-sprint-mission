@@ -1,18 +1,46 @@
-package com.sprint.mission.discodeit.repository.jcf;
+package com.sprint.mission.discodeit.repository.file;
 
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import org.springframework.stereotype.Repository;
 
+import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 
-//@Repository
-public class JCFReadStatusRepository implements ReadStatusRepository {
-    private final Map<UUID, ReadStatus> store = new HashMap<>();
+@Repository
+public class FileReadStatusRepository implements ReadStatusRepository {
+    private static final String FILE_PATH_STR = "read_statuses.dat";
+    private final Map<UUID, ReadStatus> store;
+
+    public FileReadStatusRepository() {
+        this.store = loadData();
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<UUID, ReadStatus> loadData() {
+        Path filePath = Paths.get(FILE_PATH_STR);
+        if (!Files.exists(filePath)) return new HashMap<>();
+        try (ObjectInputStream ois = new ObjectInputStream(Files.newInputStream(filePath))) {
+            return (Map<UUID, ReadStatus>) ois.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            return new HashMap<>();
+        }
+    }
+
+    private void saveData(Map<UUID, ReadStatus> data) {
+        Path filePath = Paths.get(FILE_PATH_STR);
+        try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(filePath))) {
+            oos.writeObject(data);
+        } catch (IOException e) {
+            throw new RuntimeException("읽음 상태 파일 저장 중 오류 발생", e);
+        }
+    }
 
     @Override
     public void save(ReadStatus readStatus) {
         store.put(readStatus.getId(), readStatus);
+        saveData(store);
     }
 
     @Override
@@ -32,6 +60,7 @@ public class JCFReadStatusRepository implements ReadStatusRepository {
     @Override
     public void deleteByChannelId(UUID channelId) {
         store.values().removeIf(rs -> rs.getChannelId().equals(channelId));
+        saveData(store);
     }
 
     @Override
@@ -42,6 +71,7 @@ public class JCFReadStatusRepository implements ReadStatusRepository {
     @Override
     public void delete(UUID id) {
         store.remove(id);
+        saveData(store);
     }
 
     @Override

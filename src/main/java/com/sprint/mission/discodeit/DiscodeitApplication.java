@@ -4,13 +4,14 @@ import com.sprint.mission.discodeit.dto.*;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.Message;
-import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.service.ChannelService;
 import com.sprint.mission.discodeit.service.MessageService;
 import com.sprint.mission.discodeit.service.UserService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+
+import java.util.List;
 
 @SpringBootApplication
 public class DiscodeitApplication {
@@ -41,7 +42,10 @@ public class DiscodeitApplication {
                 channel1.getId(),
                 user1.id(),
                 "안녕하세요, 첫 메시지입니다!",
-                null
+                List.of(new AttachmentRequest(
+                        "test.text",
+                        "http://localhost:8080/files/test.text",
+                        1024L))
         ));
         System.out.println(" -> 메시지 작성 완료: " + message1.getContent() + "\n");
 

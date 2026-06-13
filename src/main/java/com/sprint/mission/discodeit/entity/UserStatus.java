@@ -2,12 +2,14 @@ package com.sprint.mission.discodeit.entity;
 
 import lombok.Getter;
 
+import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
 @Getter
-public class UserStatus {
+public class UserStatus implements Serializable {
+    private static final long serialVersionUID = 1L;
     private final UUID id; // UserStatus 고유 식별자, 이 기록 자체의 고유 번호
     private final UUID userId; // 추적하는 대상의 userid
     private Instant lastActiveAt; // 유저가 활동한 마지막 시간
