@@ -27,18 +27,18 @@ public class BasicChannelService implements ChannelService {
     private final MessageRepository messageRepository;
 
     @Override
-    public Channel createPublic(PublicChannelCreateRequest request) {
+    public ChannelResponse createPublic(PublicChannelCreateRequest request) {
         Channel channel = new Channel(
                 request.name(),
                 ChannelType.PUBLIC,
                 request.description()
         );
         channelRepository.save(channel);
-        return channel;
+        return find(channel.getId());
     }
 
     @Override
-    public Channel createPrivate(PrivateChannelCreateRequest request) {
+    public ChannelResponse createPrivate(PrivateChannelCreateRequest request) {
         Channel channel = new Channel(
                 "",
                 ChannelType.PRIVATE,
@@ -52,7 +52,7 @@ public class BasicChannelService implements ChannelService {
                 readStatusRepository.save(readStatus);
             }
         }
-        return channel;
+        return find(channel.getId());
     }
 
     @Override

@@ -27,7 +27,7 @@ public class User implements Serializable {
         this.email = email;
         this.username = username;
         this.password = password;
-        this.statusMessage = "오프라인";
+        this.statusMessage = "";
     }
 
     public void update(String email, String username, String password, String statusMessage) {
