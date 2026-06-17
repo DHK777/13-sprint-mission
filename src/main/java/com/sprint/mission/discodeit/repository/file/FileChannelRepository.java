@@ -2,19 +2,25 @@ package com.sprint.mission.discodeit.repository.file;
 
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
+import org.springframework.stereotype.Repository;
 
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 
+@Repository
 public class FileChannelRepository implements ChannelRepository {
     private static final String FILE_PATH_STR = "channels.dat";
+    private final Map<UUID, Channel> store;
+
+    public FileChannelRepository() {
+        this.store = loadData();
+    }
 
     @SuppressWarnings("unchecked")
     private Map<UUID, Channel> loadData() {
         Path filePath = Paths.get(FILE_PATH_STR);
         if (!Files.exists(filePath)) return new HashMap<>();
-
         try (ObjectInputStream ois = new ObjectInputStream(Files.newInputStream(filePath))) {
             return (Map<UUID, Channel>) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
@@ -33,21 +39,23 @@ public class FileChannelRepository implements ChannelRepository {
 
     @Override
     public void save(Channel channel) {
-        Map<UUID, Channel> data = loadData();
-        data.put(channel.getId(), channel);
-        saveData(data);
+        store.put(channel.getId(), channel);
+        saveData(store);
     }
 
     @Override
-    public Channel findById(UUID id) { return loadData().get(id); }
+    public Optional<Channel> findById(UUID id) {
+        return Optional.ofNullable(store.get(id));
+    }
 
     @Override
-    public List<Channel> findAll() { return new ArrayList<>(loadData().values()); }
+    public List<Channel> findAll() {
+        return new ArrayList<>(store.values());
+    }
 
     @Override
     public void delete(UUID id) {
-        Map<UUID, Channel> data = loadData();
-        data.remove(id);
-        saveData(data);
+        store.remove(id);
+        saveData(store);
     }
 }

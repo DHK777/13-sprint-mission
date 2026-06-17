@@ -2,19 +2,25 @@ package com.sprint.mission.discodeit.repository.file;
 
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.repository.MessageRepository;
+import org.springframework.stereotype.Repository;
 
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 
+@Repository
 public class FileMessageRepository implements MessageRepository {
-    private static final String FILE_PATH_STR = "messages.dat"; // 메시지 전용 창고
+    private static final String FILE_PATH_STR = "messages.dat";
+    private final Map<UUID, Message> store;
+
+    public FileMessageRepository() {
+        this.store = loadData();
+    }
 
     @SuppressWarnings("unchecked")
     private Map<UUID, Message> loadData() {
         Path filePath = Paths.get(FILE_PATH_STR);
         if (!Files.exists(filePath)) return new HashMap<>();
-
         try (ObjectInputStream ois = new ObjectInputStream(Files.newInputStream(filePath))) {
             return (Map<UUID, Message>) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
@@ -33,21 +39,36 @@ public class FileMessageRepository implements MessageRepository {
 
     @Override
     public void save(Message message) {
-        Map<UUID, Message> data = loadData();
-        data.put(message.getId(), message);
-        saveData(data);
+        store.put(message.getId(), message);
+        saveData(store);
     }
 
     @Override
-    public Message findById(UUID id) { return loadData().get(id); }
+    public Optional<Message> findById(UUID id) {
+        return Optional.ofNullable(store.get(id));
+    }
 
     @Override
-    public List<Message> findAll() { return new ArrayList<>(loadData().values()); }
+    public List<Message> findAll() {
+        return new ArrayList<>(store.values());
+    }
 
     @Override
     public void delete(UUID id) {
-        Map<UUID, Message> data = loadData();
-        data.remove(id);
-        saveData(data);
+        store.remove(id);
+        saveData(store);
+    }
+
+    @Override
+    public List<Message> findByChannelId(UUID channelId) {
+        return store.values().stream()
+                .filter(message -> message.getChannelId().equals(channelId))
+                .toList();
+    }
+
+    @Override
+    public void deleteByChannelId(UUID channelId) {
+        store.values().removeIf(message -> message.getChannelId().equals(channelId));
+        saveData(store);
     }
 }
