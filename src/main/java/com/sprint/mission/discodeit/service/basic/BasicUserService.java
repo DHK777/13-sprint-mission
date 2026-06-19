@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.UserCreateRequest;
+import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.dto.UserResponse;
 import com.sprint.mission.discodeit.dto.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
@@ -116,5 +117,26 @@ public class BasicUserService implements UserService {
                 user.getStatusMessage(),
                 isOnline
         );
+    }
+
+    @Override
+    public List<UserDto> findAllUsers() {
+        return userRepository.findAll().stream()
+                .map(user -> {
+                    boolean isOnline = userStatusRepository.findByUserId(user.getId())
+                            .map(UserStatus::isOnline)
+                            .orElse(false);
+
+                    return new UserDto(
+                            user.getId(),
+                            user.getCreatedAt(),
+                            user.getUpdatedAt(),
+                            user.getUsername(),
+                            user.getEmail(),
+                            user.getProfileId(),
+                            isOnline
+                    );
+                })
+                .toList();
     }
 }

@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.controller;
 
 import com.sprint.mission.discodeit.dto.UserCreateRequest;
+import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.dto.UserResponse;
 import com.sprint.mission.discodeit.dto.UserUpdateRequest;
 import com.sprint.mission.discodeit.service.UserService;
@@ -41,5 +42,11 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable UUID userId) {
         userService.delete(userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/findAll")
+    public ResponseEntity<List<UserDto>> findAllUsers() {
+        List<UserDto> users = userService.findAllUsers();
+        return ResponseEntity.ok(users);
     }
 }

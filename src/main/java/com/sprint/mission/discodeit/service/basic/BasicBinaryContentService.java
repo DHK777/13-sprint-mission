@@ -53,4 +53,10 @@ public class BasicBinaryContentService implements BinaryContentService {
                 content.getFileUrl(), content.getFileSize(), content.getCreatedAt()
         );
     }
+
+    @Override
+    public BinaryContent findEntity(UUID id) {
+        return binaryContentRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 첨부파일을 찾을 수 없습니다."));
+    }
 }
