@@ -24,13 +24,19 @@ public class BasicAuthService implements AuthService {
         if (!user.getPassword().equals(request.password())) {
             throw new IllegalArgumentException("아이디 또는 비밀번호가 일치하지 않습니다.");
         }
+        return toResponse(user);
+    }
 
+    private UserResponse toResponse(User user) {
         boolean isOnline = userStatusRepository.findByUserId(user.getId())
                 .map(UserStatus::isOnline).orElse(false);
 
-        return new UserResponse(user.getId(),
+        return new UserResponse(
+                user.getId(),
                 user.getEmail(),
                 user.getUsername(),
-                isOnline);
+                user.getStatusMessage(),
+                isOnline
+        );
     }
 }

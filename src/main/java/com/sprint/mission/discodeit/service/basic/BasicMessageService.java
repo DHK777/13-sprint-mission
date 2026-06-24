@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.AttachmentRequest;
 import com.sprint.mission.discodeit.dto.MessageCreateRequest;
+import com.sprint.mission.discodeit.dto.MessageResponse;
 import com.sprint.mission.discodeit.dto.MessageUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Message;
@@ -25,7 +26,7 @@ public class BasicMessageService implements MessageService {
     private final BinaryContentRepository binaryContentRepository;
 
     @Override
-    public Message create(MessageCreateRequest request) {
+    public MessageResponse create(MessageCreateRequest request) {
         if (channelRepository.findById(request.channelId()).isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 채널입니다.");
         }
@@ -43,27 +44,30 @@ public class BasicMessageService implements MessageService {
             }
         }
         messageRepository.save(message);
-        return message;
+        return toResponse(message);
     }
 
     @Override
-    public Message read(UUID id) {
-        return messageRepository.findById(id)
+    public MessageResponse read(UUID id) {
+        Message message = messageRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("메시지를 찾을 수 없습니다."));
+        return toResponse(message);
     }
 
     @Override
-    public List<Message> findAllByChannelId(UUID channelId) {
-        return messageRepository.findByChannelId(channelId);
+    public List<MessageResponse> findAllByChannelId(UUID channelId) {
+        return messageRepository.findByChannelId(channelId).stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Override
-    public Message update(UUID id, MessageUpdateRequest request) {
+    public MessageResponse update(UUID id, MessageUpdateRequest request) {
         Message message = messageRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("수정할 메시지를 찾을 수 없습니다."));
         message.update(request.content());
         messageRepository.save(message);
-        return message;
+        return toResponse(message);
     }
 
     @Override
@@ -74,5 +78,13 @@ public class BasicMessageService implements MessageService {
             binaryContentRepository.deleteById(fileId);
         }
         messageRepository.delete(id);
+    }
+
+    private MessageResponse toResponse(Message message) {
+        return new MessageResponse(
+                message.getId(), message.getChannelId(), message.getAuthorId(),
+                message.getContent(), message.getAttachmentIds(),
+                message.getCreatedAt(), message.getUpdatedAt()
+        );
     }
 }

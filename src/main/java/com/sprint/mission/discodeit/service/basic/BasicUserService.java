@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.UserCreateRequest;
+import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.dto.UserResponse;
 import com.sprint.mission.discodeit.dto.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
@@ -48,45 +49,21 @@ public class BasicUserService implements UserService {
 
         UserStatus userStatus = new UserStatus(user.getId());
         userStatusRepository.save(userStatus);
-
-        return new UserResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getUsername(),
-                userStatus.isOnline()
-        );
+        return toResponse(user);
     }
 
     @Override
     public UserResponse find(UUID id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("해당 유저를 찾을 수 없습니다."));
-
-        boolean isOnline = userStatusRepository.findByUserId(id)
-                .map(UserStatus::isOnline).orElse(false);
-
-        return new UserResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getUsername(),
-                isOnline
-        );
+        return toResponse(user);
     }
 
     @Override
     public List<UserResponse> findAll() {
-        List<User> users = userRepository.findAll();
-        return users.stream().map(user -> {
-            boolean isOnline = userStatusRepository.findByUserId(user.getId())
-                    .map(UserStatus::isOnline).orElse(false);
-
-            return new UserResponse(
-                    user.getId(),
-                    user.getEmail(),
-                    user.getUsername(),
-                    isOnline
-            );
-        }).toList();
+        return userRepository.findAll().stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Override
@@ -113,14 +90,7 @@ public class BasicUserService implements UserService {
         }
 
         userRepository.save(user);
-
-        boolean isOnline = userStatusRepository.findByUserId(user.getId())
-                .map(UserStatus::isOnline).orElse(false);
-
-        return new UserResponse(user.getId(),
-                user.getEmail(),
-                user.getUsername(),
-                isOnline);
+        return toResponse(user);
     }
 
     @Override
@@ -134,5 +104,39 @@ public class BasicUserService implements UserService {
 
         userStatusRepository.deleteByUserId(user.getId());
         userRepository.delete(user.getId());
+    }
+
+    private UserResponse toResponse(User user) {
+        boolean isOnline = userStatusRepository.findByUserId(user.getId())
+                .map(UserStatus::isOnline).orElse(false);
+
+        return new UserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getUsername(),
+                user.getStatusMessage(),
+                isOnline
+        );
+    }
+
+    @Override
+    public List<UserDto> findAllUsers() {
+        return userRepository.findAll().stream()
+                .map(user -> {
+                    boolean isOnline = userStatusRepository.findByUserId(user.getId())
+                            .map(UserStatus::isOnline)
+                            .orElse(false);
+
+                    return new UserDto(
+                            user.getId(),
+                            user.getCreatedAt(),
+                            user.getUpdatedAt(),
+                            user.getUsername(),
+                            user.getEmail(),
+                            user.getProfileId(),
+                            isOnline
+                    );
+                })
+                .toList();
     }
 }

@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.ReadStatusCreateRequest;
+import com.sprint.mission.discodeit.dto.ReadStatusResponse;
 import com.sprint.mission.discodeit.dto.ReadStatusUpdateRequest;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
@@ -21,7 +22,7 @@ public class BasicReadStatusService implements ReadStatusService {
     private final ChannelRepository channelRepository;
 
     @Override
-    public ReadStatus create(ReadStatusCreateRequest request) {
+    public ReadStatusResponse create(ReadStatusCreateRequest request) {
         if (channelRepository.findById(request.channelId()).isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 채널입니다.");
         }
@@ -35,31 +36,41 @@ public class BasicReadStatusService implements ReadStatusService {
 
         ReadStatus readStatus = new ReadStatus(request.channelId(), request.userId());
         readStatusRepository.save(readStatus);
-        return readStatus;
+        return toResponse(readStatus);
     }
 
     @Override
-    public ReadStatus find(UUID id) {
-        return readStatusRepository.findById(id)
+    public ReadStatusResponse find(UUID id) {
+        ReadStatus readStatus = readStatusRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("상태창을 찾을 수 없습니다."));
+        return toResponse(readStatus);
+    }
+
+    public List<ReadStatusResponse> findAllByUserId(UUID userId) {
+        return readStatusRepository.findByUserId(userId).stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Override
-    public List<ReadStatus> findAllByUserId(UUID userId) {
-        return readStatusRepository.findByUserId(userId);
-    }
-
-    @Override
-    public ReadStatus update(UUID id, ReadStatusUpdateRequest request) {
-        ReadStatus readStatus = find(id);
+    public ReadStatusResponse update(UUID id, ReadStatusUpdateRequest request) {
+        ReadStatus readStatus = readStatusRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("상태창을 찾을 수 없습니다."));
         readStatus.updateLastReadAt();
         readStatusRepository.save(readStatus);
-        return readStatus;
+        return toResponse(readStatus);
     }
 
     @Override
     public void delete(UUID id) {
         find(id);
         readStatusRepository.delete(id);
+    }
+
+    private ReadStatusResponse toResponse(ReadStatus readStatus) {
+        return new ReadStatusResponse(
+                readStatus.getId(), readStatus.getChannelId(),
+                readStatus.getUserId(), readStatus.getLastReadAt()
+        );
     }
 }
