@@ -4,8 +4,9 @@ import java.util.List;
 import java.util.UUID;
 
 public record MessageCreateRequest(
-        UUID channelId,
-        UUID senderId,
-        String content,
-        List<AttachmentRequest> attachments
-) {}
+    UUID channelId,
+    UUID authorId,
+    String content
+) {
+
+}
