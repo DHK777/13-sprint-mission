@@ -30,7 +30,13 @@ public class MessageController {
   public ResponseEntity<Message> createMessage(
       @RequestPart("messageCreateRequest") MessageCreateRequest request,
       @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments) {
-    Message response = messageService.create(request, attachments);
+
+    Message response = messageService.create(
+        request.channelId(),
+        request.authorId(),
+        request.content(),
+        attachments
+    );
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
@@ -52,7 +58,8 @@ public class MessageController {
   public ResponseEntity<Message> updateMessage(
       @PathVariable UUID messageId,
       @RequestBody MessageUpdateRequest request) {
-    Message response = messageService.update(messageId, request);
+
+    Message response = messageService.update(messageId, request.newContent());
     return ResponseEntity.ok(response);
   }
 

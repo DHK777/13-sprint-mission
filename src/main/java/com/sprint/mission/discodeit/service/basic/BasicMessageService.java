@@ -1,7 +1,5 @@
 package com.sprint.mission.discodeit.service.basic;
 
-import com.sprint.mission.discodeit.dto.MessageCreateRequest;
-import com.sprint.mission.discodeit.dto.MessageUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
@@ -26,15 +24,16 @@ public class BasicMessageService implements MessageService {
   private final BinaryContentRepository binaryContentRepository;
 
   @Override
-  public Message create(MessageCreateRequest request, List<MultipartFile> attachments) {
-    if (channelRepository.findById(request.channelId()).isEmpty()) {
+  public Message create(UUID channelId, UUID authorId, String content,
+      List<MultipartFile> attachments) {
+    if (channelRepository.findById(channelId).isEmpty()) {
       throw new IllegalArgumentException("존재하지 않는 채널입니다.");
     }
-    if (userRepository.findById(request.authorId()).isEmpty()) {
+    if (userRepository.findById(authorId).isEmpty()) {
       throw new IllegalArgumentException("존재하지 않는 유저입니다.");
     }
 
-    Message message = new Message(request.channelId(), request.authorId(), request.content());
+    Message message = new Message(channelId, authorId, content);
 
     if (attachments != null && !attachments.isEmpty()) {
       for (MultipartFile file : attachments) {
@@ -65,10 +64,11 @@ public class BasicMessageService implements MessageService {
   }
 
   @Override
-  public Message update(UUID id, MessageUpdateRequest request) {
+  public Message update(UUID id, String newContent) {
     Message message = messageRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("수정할 메시지를 찾을 수 없습니다."));
-    message.update(request.newContent());
+
+    message.update(newContent);
     messageRepository.save(message);
     return message;
   }

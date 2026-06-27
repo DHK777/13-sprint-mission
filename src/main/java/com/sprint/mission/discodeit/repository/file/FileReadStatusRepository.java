@@ -14,7 +14,7 @@ import java.util.*;
 @ConditionalOnProperty(prefix = "discodeit.repository", name = "type", havingValue = "file")
 public class FileReadStatusRepository implements ReadStatusRepository {
 
-  private static final String FILE_PATH_STR = "read_statuses.dat";
+  private static final String FILE_PATH = "read_statuses.dat";
   private final Map<UUID, ReadStatus> store;
   private final FileLockProvider fileLockProvider;
 
@@ -25,14 +25,14 @@ public class FileReadStatusRepository implements ReadStatusRepository {
 
   @SuppressWarnings("unchecked")
   private Map<UUID, ReadStatus> loadData() {
-    Path filePath = Paths.get(FILE_PATH_STR);
+    Path filePath = Paths.get(FILE_PATH);
     ReentrantLock lock = fileLockProvider.getLock(filePath);
 
     lock.lock();
     try {
-        if (!Files.exists(filePath)) {
-            return new HashMap<>();
-        }
+      if (!Files.exists(filePath)) {
+        return new HashMap<>();
+      }
       try (ObjectInputStream ois = new ObjectInputStream(Files.newInputStream(filePath))) {
         return (Map<UUID, ReadStatus>) ois.readObject();
       } catch (IOException | ClassNotFoundException e) {
@@ -44,7 +44,7 @@ public class FileReadStatusRepository implements ReadStatusRepository {
   }
 
   private void saveData(Map<UUID, ReadStatus> data) {
-    Path filePath = Paths.get(FILE_PATH_STR);
+    Path filePath = Paths.get(FILE_PATH);
     ReentrantLock lock = fileLockProvider.getLock(filePath);
 
     lock.lock();

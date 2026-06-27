@@ -25,7 +25,11 @@ public class BinaryContentController {
   @PostMapping
   public ResponseEntity<BinaryContent> createBinaryContent(
       @RequestBody BinaryContentCreateRequest request) {
-    BinaryContent response = binaryContentService.create(request);
+    BinaryContent response = binaryContentService.create(
+        request.fileName(),
+        request.fileUrl(),
+        request.size()
+    );
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 

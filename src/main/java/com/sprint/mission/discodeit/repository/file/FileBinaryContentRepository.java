@@ -14,7 +14,7 @@ import java.util.*;
 @ConditionalOnProperty(prefix = "discodeit.repository", name = "type", havingValue = "file")
 public class FileBinaryContentRepository implements BinaryContentRepository {
 
-  private static final String FILE_PATH_STR = "binary_contents.dat";
+  private static final String FILE_PATH = "binary_contents.dat";
   private final Map<UUID, BinaryContent> store;
   private final FileLockProvider fileLockProvider;
 
@@ -25,14 +25,14 @@ public class FileBinaryContentRepository implements BinaryContentRepository {
 
   @SuppressWarnings("unchecked")
   private Map<UUID, BinaryContent> loadData() {
-    Path filePath = Paths.get(FILE_PATH_STR);
+    Path filePath = Paths.get(FILE_PATH);
     ReentrantLock lock = fileLockProvider.getLock(filePath);
 
     lock.lock();
     try {
-        if (!Files.exists(filePath)) {
-            return new HashMap<>();
-        }
+      if (!Files.exists(filePath)) {
+        return new HashMap<>();
+      }
       try (ObjectInputStream ois = new ObjectInputStream(Files.newInputStream(filePath))) {
         return (Map<UUID, BinaryContent>) ois.readObject();
       } catch (IOException | ClassNotFoundException e) {
@@ -44,7 +44,7 @@ public class FileBinaryContentRepository implements BinaryContentRepository {
   }
 
   private void saveData(Map<UUID, BinaryContent> data) {
-    Path filePath = Paths.get(FILE_PATH_STR);
+    Path filePath = Paths.get(FILE_PATH);
     ReentrantLock lock = fileLockProvider.getLock(filePath);
 
     lock.lock();

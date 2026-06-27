@@ -14,7 +14,7 @@ import java.util.*;
 @ConditionalOnProperty(prefix = "discodeit.repository", name = "type", havingValue = "file")
 public class FileUserRepository implements UserRepository {
 
-  private static final String FILE_PATH_STR = "users.dat";
+  private static final String FILE_PATH = "users.dat";
 
   private final Map<UUID, User> store;
 
@@ -27,7 +27,7 @@ public class FileUserRepository implements UserRepository {
 
   @SuppressWarnings("unchecked")
   private Map<UUID, User> loadData() {
-    Path filePath = Paths.get(FILE_PATH_STR);
+    Path filePath = Paths.get(FILE_PATH);
     ReentrantLock lock = fileLockProvider.getLock(filePath);
 
     lock.lock();
@@ -46,7 +46,7 @@ public class FileUserRepository implements UserRepository {
   }
 
   private void saveData(Map<UUID, User> data) {
-    Path filePath = Paths.get(FILE_PATH_STR);
+    Path filePath = Paths.get(FILE_PATH);
     ReentrantLock lock = fileLockProvider.getLock(filePath);
 
     lock.lock();

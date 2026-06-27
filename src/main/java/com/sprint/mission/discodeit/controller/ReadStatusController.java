@@ -27,7 +27,8 @@ public class ReadStatusController {
   @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Created")
   @PostMapping
   public ResponseEntity<ReadStatus> createReadStatus(@RequestBody ReadStatusCreateRequest request) {
-    ReadStatus response = readStatusService.create(request);
+    ReadStatus response = readStatusService.create(request.channelId(), request.userId(),
+        request.lastReadAt());
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
@@ -43,7 +44,7 @@ public class ReadStatusController {
   public ResponseEntity<ReadStatus> updateReadStatus(
       @PathVariable UUID statusId,
       @RequestBody ReadStatusUpdateRequest request) {
-    ReadStatus response = readStatusService.update(statusId, request);
+    ReadStatus response = readStatusService.update(statusId, request.newLastReadAt());
     return ResponseEntity.ok(response);
   }
 

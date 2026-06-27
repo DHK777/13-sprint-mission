@@ -1,11 +1,10 @@
 package com.sprint.mission.discodeit.service.basic;
 
-import com.sprint.mission.discodeit.dto.UserStatusCreateRequest;
-import com.sprint.mission.discodeit.dto.UserStatusUpdateRequest;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.service.UserStatusService;
+import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,18 +19,16 @@ public class BasicUserStatusService implements UserStatusService {
   private final UserRepository userRepository;
 
   @Override
-  public UserStatus create(UserStatusCreateRequest request) {
-    if (userRepository.findById(request.userId()).isEmpty()) {
+  public UserStatus create(UUID userId) {
+    if (userRepository.findById(userId).isEmpty()) {
       throw new IllegalArgumentException("존재하지 않는 유저입니다.");
     }
-
-    if (userStatusRepository.findByUserId(request.userId()).isPresent()) {
+    if (userStatusRepository.findByUserId(userId).isPresent()) {
       throw new IllegalArgumentException("해당 유저의 상태 정보가 이미 존재합니다.");
     }
 
-    UserStatus status = new UserStatus(request.userId());
+    UserStatus status = new UserStatus(userId);
     userStatusRepository.save(status);
-
     return status;
   }
 
@@ -47,7 +44,7 @@ public class BasicUserStatusService implements UserStatusService {
   }
 
   @Override
-  public UserStatus update(UUID id, UserStatusUpdateRequest request) {
+  public UserStatus update(UUID id, Instant newLastActiveAt) {
     UserStatus status = userStatusRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("상태 정보를 찾을 수 없습니다."));
     status.updateActivity();
@@ -56,10 +53,9 @@ public class BasicUserStatusService implements UserStatusService {
   }
 
   @Override
-  public UserStatus updateByUserId(UUID userId, UserStatusUpdateRequest request) {
+  public UserStatus updateByUserId(UUID userId, Instant newLastActiveAt) {
     UserStatus status = userStatusRepository.findByUserId(userId)
         .orElseThrow(() -> new IllegalArgumentException("해당 유저의 상태 정보를 찾을 수 없습니다."));
-
     status.updateActivity();
     userStatusRepository.save(status);
     return status;

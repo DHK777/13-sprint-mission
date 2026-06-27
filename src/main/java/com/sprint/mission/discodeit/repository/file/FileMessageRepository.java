@@ -14,7 +14,7 @@ import java.util.*;
 @ConditionalOnProperty(prefix = "discodeit.repository", name = "type", havingValue = "file")
 public class FileMessageRepository implements MessageRepository {
 
-  private static final String FILE_PATH_STR = "messages.dat";
+  private static final String FILE_PATH = "messages.dat";
   private final Map<UUID, Message> store;
   private final FileLockProvider fileLockProvider;
 
@@ -25,14 +25,14 @@ public class FileMessageRepository implements MessageRepository {
 
   @SuppressWarnings("unchecked")
   private Map<UUID, Message> loadData() {
-    Path filePath = Paths.get(FILE_PATH_STR);
+    Path filePath = Paths.get(FILE_PATH);
     ReentrantLock lock = fileLockProvider.getLock(filePath);
 
     lock.lock();
     try {
-        if (!Files.exists(filePath)) {
-            return new HashMap<>();
-        }
+      if (!Files.exists(filePath)) {
+        return new HashMap<>();
+      }
       try (ObjectInputStream ois = new ObjectInputStream(Files.newInputStream(filePath))) {
         return (Map<UUID, Message>) ois.readObject();
       } catch (IOException | ClassNotFoundException e) {
@@ -44,7 +44,7 @@ public class FileMessageRepository implements MessageRepository {
   }
 
   private void saveData(Map<UUID, Message> data) {
-    Path filePath = Paths.get(FILE_PATH_STR);
+    Path filePath = Paths.get(FILE_PATH);
     ReentrantLock lock = fileLockProvider.getLock(filePath);
 
     lock.lock();

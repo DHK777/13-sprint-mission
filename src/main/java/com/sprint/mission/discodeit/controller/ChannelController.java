@@ -1,6 +1,5 @@
 package com.sprint.mission.discodeit.controller;
 
-import com.sprint.mission.discodeit.dto.ChannelDto;
 import com.sprint.mission.discodeit.dto.PrivateChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.PublicChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.PublicChannelUpdateRequest;
@@ -26,17 +25,20 @@ public class ChannelController {
 
   @Operation(summary = "User가 참여 중인 Channel 목록 조회")
   @GetMapping
-  public ResponseEntity<List<ChannelDto>> getAllChannels(
+  public ResponseEntity<List<Channel>> getAllChannels(
       @RequestParam(name = "userId") UUID userId) {
-    return ResponseEntity.ok(channelService.findAllByUserId(userId));
+
+    List<Channel> channels = channelService.findAllByUserId(userId);
+    return ResponseEntity.ok(channels);
   }
 
-  @Operation(summary = "Public Channel 생성")
+  @Operation(summary = "PUBLIC Channel 생성")
   @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Created")
   @PostMapping("/public")
   public ResponseEntity<Channel> createPublicChannel(
       @RequestBody PublicChannelCreateRequest request) {
-    Channel response = channelService.createPublicChannel(request);
+
+    Channel response = channelService.createPublic(request.name(), request.description());
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
@@ -45,7 +47,8 @@ public class ChannelController {
   @PostMapping("/private")
   public ResponseEntity<Channel> createPrivateChannel(
       @RequestBody PrivateChannelCreateRequest request) {
-    Channel response = channelService.createPrivateChannel(request);
+
+    Channel response = channelService.createPrivate(request.participantIds());
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
@@ -54,7 +57,9 @@ public class ChannelController {
   public ResponseEntity<Channel> updateChannel(
       @PathVariable UUID channelId,
       @RequestBody PublicChannelUpdateRequest request) {
-    Channel response = channelService.update(channelId, request);
+
+    Channel response = channelService.update(channelId, request.newName(),
+        request.newDescription());
     return ResponseEntity.ok(response);
   }
 

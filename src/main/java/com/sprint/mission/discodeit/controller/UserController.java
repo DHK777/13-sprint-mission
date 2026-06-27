@@ -41,8 +41,12 @@ public class UserController {
   public ResponseEntity<User> createUser(
       @RequestPart("userCreateRequest") UserCreateRequest request,
       @RequestPart(value = "profile", required = false) MultipartFile profile) {
-
-    User response = userService.create(request, profile);
+    User response = userService.create(
+        request.email(),
+        request.username(),
+        request.password(),
+        profile
+    );
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
@@ -52,8 +56,14 @@ public class UserController {
       @PathVariable UUID userId,
       @RequestPart("userUpdateRequest") UserUpdateRequest request,
       @RequestPart(value = "profile", required = false) MultipartFile profile) {
-
-    User response = userService.update(userId, request, profile);
+    User response = userService.update(
+        userId,
+        request.newEmail(),
+        request.newUsername(),
+        request.newPassword(),
+        request.statusMessage(),
+        profile
+    );
     return ResponseEntity.ok(response);
   }
 
@@ -71,7 +81,7 @@ public class UserController {
       @PathVariable UUID userId,
       @RequestBody UserStatusUpdateRequest request) {
 
-    UserStatus response = userStatusService.updateByUserId(userId, request);
+    UserStatus response = userStatusService.updateByUserId(userId, request.newLastActiveAt());
     return ResponseEntity.ok(response);
   }
 }

@@ -1,8 +1,6 @@
 package com.sprint.mission.discodeit.service.basic;
 
-import com.sprint.mission.discodeit.dto.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.UserDto;
-import com.sprint.mission.discodeit.dto.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
@@ -26,15 +24,15 @@ public class BasicUserService implements UserService {
   private final UserStatusRepository userStatusRepository;
 
   @Override
-  public User create(UserCreateRequest request, MultipartFile profile) {
-    if (userRepository.existsByUsername(request.username())) {
+  public User create(String email, String username, String password, MultipartFile profile) {
+    if (userRepository.existsByUsername(username)) {
       throw new IllegalArgumentException("이미 사용 중인 유저 이름입니다.");
     }
-    if (userRepository.existsByEmail(request.email())) {
+    if (userRepository.existsByEmail(email)) {
       throw new IllegalArgumentException("이미 가입된 이메일입니다.");
     }
 
-    User user = new User(request.email(), request.username(), request.password());
+    User user = new User(email, username, password);
 
     saveProfileImage(user, profile);
     userRepository.save(user);
@@ -56,16 +54,17 @@ public class BasicUserService implements UserService {
   }
 
   @Override
-  public User update(UUID id, UserUpdateRequest request, MultipartFile profile) {
+  public User update(UUID id, String newEmail, String newUsername, String newPassword,
+      String statusMessage, MultipartFile profile) {
 
     User user = userRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("수정할 유저를 찾을 수 없습니다."));
 
     user.update(
-        request.newEmail(),
-        request.newUsername(),
-        request.newPassword(),
-        request.statusMessage()
+        newEmail,
+        newUsername,
+        newPassword,
+        statusMessage
     );
 
     saveProfileImage(user, profile);
