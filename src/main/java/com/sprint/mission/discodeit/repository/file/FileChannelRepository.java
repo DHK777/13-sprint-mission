@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.repository.file;
 
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
+import java.util.concurrent.locks.ReentrantLock;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
@@ -12,52 +13,71 @@ import java.util.*;
 @Repository
 @ConditionalOnProperty(prefix = "discodeit.repository", name = "type", havingValue = "file")
 public class FileChannelRepository implements ChannelRepository {
-    private static final String FILE_PATH_STR = "channels.dat";
-    private final Map<UUID, Channel> store;
 
-    public FileChannelRepository() {
-        this.store = loadData();
-    }
+  private static final String FILE_PATH = "channels.dat";
+  private final Map<UUID, Channel> store;
+  private final FileLockProvider fileLockProvider;
 
-    @SuppressWarnings("unchecked")
-    private Map<UUID, Channel> loadData() {
-        Path filePath = Paths.get(FILE_PATH_STR);
-        if (!Files.exists(filePath)) return new HashMap<>();
-        try (ObjectInputStream ois = new ObjectInputStream(Files.newInputStream(filePath))) {
-            return (Map<UUID, Channel>) ois.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            return new HashMap<>();
-        }
-    }
+  public FileChannelRepository(FileLockProvider fileLockProvider) {
+    this.fileLockProvider = fileLockProvider;
+    this.store = loadData();
+  }
 
-    private void saveData(Map<UUID, Channel> data) {
-        Path filePath = Paths.get(FILE_PATH_STR);
-        try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(filePath))) {
-            oos.writeObject(data);
-        } catch (IOException e) {
-            throw new RuntimeException("채널 파일 저장 중 오류 발생", e);
-        }
-    }
+  @SuppressWarnings("unchecked")
+  private Map<UUID, Channel> loadData() {
+    Path filePath = Paths.get(FILE_PATH);
+    ReentrantLock lock = fileLockProvider.getLock(filePath);
 
-    @Override
-    public void save(Channel channel) {
-        store.put(channel.getId(), channel);
-        saveData(store);
+    lock.lock();
+    try {
+      if (!Files.exists(filePath)) {
+        return new HashMap<>();
+      }
+      try (ObjectInputStream ois = new ObjectInputStream(Files.newInputStream(filePath))) {
+        return (Map<UUID, Channel>) ois.readObject();
+      } catch (IOException | ClassNotFoundException e) {
+        return new HashMap<>();
+      }
+    } finally {
+      lock.unlock();
     }
+  }
 
-    @Override
-    public Optional<Channel> findById(UUID id) {
-        return Optional.ofNullable(store.get(id));
-    }
+  private void saveData(Map<UUID, Channel> data) {
+    Path filePath = Paths.get(FILE_PATH);
+    ReentrantLock lock = fileLockProvider.getLock(filePath);
 
-    @Override
-    public List<Channel> findAll() {
-        return new ArrayList<>(store.values());
+    lock.lock();
+    try {
+      try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(filePath))) {
+        oos.writeObject(data);
+      } catch (IOException e) {
+        throw new RuntimeException("채널 파일 저장 중 오류 발생", e);
+      }
+    } finally {
+      lock.unlock();
     }
+  }
 
-    @Override
-    public void delete(UUID id) {
-        store.remove(id);
-        saveData(store);
-    }
+  @Override
+  public void save(Channel channel) {
+    store.put(channel.getId(), channel);
+    saveData(store);
+  }
+
+  @Override
+  public Optional<Channel> findById(UUID id) {
+    return Optional.ofNullable(store.get(id));
+  }
+
+  @Override
+  public List<Channel> findAll() {
+    return new ArrayList<>(store.values());
+  }
+
+  @Override
+  public void delete(UUID id) {
+    store.remove(id);
+    saveData(store);
+  }
 }
