@@ -1,6 +1,5 @@
 package com.sprint.mission.discodeit.service.basic;
 
-import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
@@ -87,24 +86,8 @@ public class BasicUserService implements UserService {
   }
 
   @Override
-  public List<UserDto> findAllUsers() {
-    return userRepository.findAll().stream()
-        .map(user -> {
-          boolean isOnline = userStatusRepository.findByUserId(user.getId())
-              .map(UserStatus::isOnline)
-              .orElse(false);
-
-          return new UserDto(
-              user.getId(),
-              user.getCreatedAt(),
-              user.getUpdatedAt(),
-              user.getUsername(),
-              user.getEmail(),
-              user.getProfileId(),
-              isOnline
-          );
-        })
-        .toList();
+  public List<User> findAllUsers() {
+    return userRepository.findAll();
   }
 
   private void saveProfileImage(User user, MultipartFile profile) {

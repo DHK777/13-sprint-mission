@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.controller;
 
 import com.sprint.mission.discodeit.dto.MessageCreateRequest;
+import com.sprint.mission.discodeit.dto.MessageResponse;
 import com.sprint.mission.discodeit.dto.MessageUpdateRequest;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.service.MessageService;
@@ -25,42 +26,50 @@ public class MessageController {
   private final MessageService messageService;
 
   @Operation(summary = "메시지 전송 (파일 첨부 가능)")
-  @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Created")
+  @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      content = @io.swagger.v3.oas.annotations.media.Content(
+          mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+          encoding = @io.swagger.v3.oas.annotations.media.Encoding(
+              name = "messageCreateRequest",
+              contentType = MediaType.APPLICATION_JSON_VALUE
+          )
+      )
+  )
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  public ResponseEntity<Message> createMessage(
+  public ResponseEntity<MessageResponse> createMessage(
       @RequestPart("messageCreateRequest") MessageCreateRequest request,
       @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments) {
 
-    Message response = messageService.create(
+    Message entity = messageService.create(
         request.channelId(),
         request.authorId(),
         request.content(),
         attachments
     );
-    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    return ResponseEntity.status(HttpStatus.CREATED).body(MessageResponse.from(entity));
   }
 
   @Operation(summary = "메시지 단건 조회")
   @GetMapping("/{messageId}")
-  public ResponseEntity<Message> getMessage(@PathVariable UUID messageId) {
-    return ResponseEntity.ok(messageService.read(messageId));
+  public ResponseEntity<MessageResponse> getMessage(@PathVariable UUID messageId) {
+    return ResponseEntity.ok(MessageResponse.from(messageService.read(messageId)));
   }
 
   @Operation(summary = "채널 내 메시지 목록 조회")
   @GetMapping
-  public ResponseEntity<List<Message>> getAllMessagesByChannelId(
+  public ResponseEntity<List<MessageResponse>> getAllMessagesByChannelId(
       @RequestParam(name = "channelId") UUID channelId) {
-    return ResponseEntity.ok(messageService.findAllByChannelId(channelId));
+    List<MessageResponse> responses = messageService.findAllByChannelId(channelId).stream()
+        .map(MessageResponse::from).toList();
+    return ResponseEntity.ok(responses);
   }
 
   @Operation(summary = "메시지 수정")
   @PatchMapping("/{messageId}")
-  public ResponseEntity<Message> updateMessage(
-      @PathVariable UUID messageId,
-      @RequestBody MessageUpdateRequest request) {
-
-    Message response = messageService.update(messageId, request.newContent());
-    return ResponseEntity.ok(response);
+  public ResponseEntity<MessageResponse> updateMessage(
+      @PathVariable UUID messageId, @RequestBody MessageUpdateRequest request) {
+    Message entity = messageService.update(messageId, request.newContent());
+    return ResponseEntity.ok(MessageResponse.from(entity));
   }
 
   @Operation(summary = "메시지 삭제")

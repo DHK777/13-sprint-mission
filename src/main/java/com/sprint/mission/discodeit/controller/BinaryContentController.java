@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.controller;
 
 import com.sprint.mission.discodeit.dto.BinaryContentCreateRequest;
+import com.sprint.mission.discodeit.dto.BinaryContentResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,29 +24,38 @@ public class BinaryContentController {
 
   @Operation(summary = "첨부파일 메타데이터 생성")
   @PostMapping
-  public ResponseEntity<BinaryContent> createBinaryContent(
+  public ResponseEntity<BinaryContentResponse> createBinaryContent(
       @RequestBody BinaryContentCreateRequest request) {
-    BinaryContent response = binaryContentService.create(
+    BinaryContent entity = binaryContentService.create(
         request.fileName(),
         request.fileUrl(),
         request.size()
     );
-    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    return ResponseEntity.status(HttpStatus.CREATED).body(BinaryContentResponse.from(entity));
   }
 
   @Operation(summary = "첨부파일 메타데이터 단건 조회")
   @GetMapping("/{binaryContentId}")
-  public ResponseEntity<BinaryContent> getBinaryContent(@PathVariable UUID binaryContentId) {
-    return ResponseEntity.ok(binaryContentService.find(binaryContentId));
+  public ResponseEntity<BinaryContentResponse> getBinaryContent(
+      @PathVariable UUID binaryContentId) {
+    BinaryContent entity = binaryContentService.find(binaryContentId);
+    return ResponseEntity.ok(BinaryContentResponse.from(entity));
   }
 
   @Operation(summary = "첨부파일 메타데이터 다건(목록) 조회")
   @GetMapping
-  public ResponseEntity<List<BinaryContent>> getBinaryContents(
+  public ResponseEntity<List<BinaryContentResponse>> getBinaryContents(
       @RequestParam(name = "binaryContentIds", required = false) List<UUID> binaryContentIds) {
+
     if (binaryContentIds == null || binaryContentIds.isEmpty()) {
       return ResponseEntity.ok(java.util.Collections.emptyList());
     }
-    return ResponseEntity.ok(binaryContentService.findAllByIdIn(binaryContentIds));
+
+    List<BinaryContent> entities = binaryContentService.findAllByIdIn(binaryContentIds);
+    List<BinaryContentResponse> responses = entities.stream()
+        .map(BinaryContentResponse::from)
+        .toList();
+
+    return ResponseEntity.ok(responses);
   }
 }

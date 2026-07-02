@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.controller;
 
 import com.sprint.mission.discodeit.dto.LoginRequest;
-import com.sprint.mission.discodeit.dto.UserDto;
+import com.sprint.mission.discodeit.dto.UserResponse;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,20 +23,10 @@ public class AuthController {
 
   @Operation(summary = "로그인")
   @PostMapping("/login")
-  public ResponseEntity<UserDto> login(@RequestBody LoginRequest request) {
+  public ResponseEntity<UserResponse> login(@RequestBody LoginRequest request) {
 
     User loginUser = authService.login(request.username(), request.password());
 
-    UserDto response = new UserDto(
-        loginUser.getId(),
-        loginUser.getCreatedAt(),
-        loginUser.getUpdatedAt(),
-        loginUser.getUsername(),
-        loginUser.getEmail(),
-        loginUser.getProfileId(),
-        null
-    );
-
-    return ResponseEntity.ok(response);
+    return ResponseEntity.ok(UserResponse.from(loginUser));
   }
 }
