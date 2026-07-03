@@ -10,12 +10,14 @@ import com.sprint.mission.discodeit.service.ReadStatusService;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class BasicReadStatusService implements ReadStatusService {
 
   private final ReadStatusRepository readStatusRepository;
@@ -39,12 +41,14 @@ public class BasicReadStatusService implements ReadStatusService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public ReadStatus find(UUID id) {
     return readStatusRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("상태창을 찾을 수 없습니다."));
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<ReadStatus> findAllByUserId(UUID userId) {
     return readStatusRepository.findByUserId(userId);
   }
@@ -53,15 +57,14 @@ public class BasicReadStatusService implements ReadStatusService {
   public ReadStatus update(UUID id, Instant newLastReadAt) {
     ReadStatus readStatus = readStatusRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("상태창을 찾을 수 없습니다."));
-
     readStatus.updateLastReadAt();
-    readStatusRepository.save(readStatus);
     return readStatus;
   }
 
   @Override
   public void delete(UUID id) {
-    find(id);
-    readStatusRepository.delete(id);
+    ReadStatus readStatus = readStatusRepository.findById(id)
+        .orElseThrow(() -> new IllegalArgumentException("상태창을 찾을 수 없습니다."));
+    readStatusRepository.delete(readStatus);
   }
 }

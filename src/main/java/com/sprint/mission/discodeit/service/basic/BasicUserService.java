@@ -3,12 +3,12 @@ package com.sprint.mission.discodeit.service.basic;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
-import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -16,10 +16,10 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class BasicUserService implements UserService {
 
   private final UserRepository userRepository;
-  private final BinaryContentRepository binaryContentRepository;
   private final UserStatusRepository userStatusRepository;
 
   @Override
@@ -32,7 +32,6 @@ public class BasicUserService implements UserService {
     }
 
     User user = new User(email, username, password);
-
     saveProfileImage(user, profile);
     userRepository.save(user);
 
@@ -42,12 +41,14 @@ public class BasicUserService implements UserService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public User find(UUID id) {
     return userRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("해당 유저를 찾을 수 없습니다."));
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<User> findAll() {
     return userRepository.findAll();
   }
@@ -55,20 +56,11 @@ public class BasicUserService implements UserService {
   @Override
   public User update(UUID id, String newEmail, String newUsername, String newPassword,
       String statusMessage, MultipartFile profile) {
-
     User user = userRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("수정할 유저를 찾을 수 없습니다."));
 
-    user.update(
-        newEmail,
-        newUsername,
-        newPassword,
-        statusMessage
-    );
-
+    user.update(newEmail, newUsername, newPassword, statusMessage);
     saveProfileImage(user, profile);
-
-    userRepository.save(user);
     return user;
   }
 
@@ -77,15 +69,12 @@ public class BasicUserService implements UserService {
     User user = userRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("삭제할 유저를 찾을 수 없습니다."));
 
-    if (user.getProfile() != null) {
-      binaryContentRepository.deleteById(user.getProfile().getId());
-    }
-
     userStatusRepository.deleteByUserId(user.getId());
-    userRepository.delete(user.getId());
+    userRepository.delete(user);
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<User> findAllUsers() {
     return userRepository.findAll();
   }
@@ -97,7 +86,6 @@ public class BasicUserService implements UserService {
       String fileUrl = "/files/" + fileName;
 
       BinaryContent profileImage = new BinaryContent(fileName, fileUrl, fileSize);
-      binaryContentRepository.save(profileImage);
       user.updateProfile(profileImage);
     }
   }

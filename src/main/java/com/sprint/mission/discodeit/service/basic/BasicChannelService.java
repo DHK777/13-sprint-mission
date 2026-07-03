@@ -11,12 +11,14 @@ import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class BasicChannelService implements ChannelService {
 
   private final ChannelRepository channelRepository;
@@ -40,7 +42,6 @@ public class BasicChannelService implements ChannelService {
       for (UUID userId : participantIds) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
-
         ReadStatus readStatus = new ReadStatus(user, channel, channel.getCreatedAt());
         readStatusRepository.save(readStatus);
       }
@@ -49,12 +50,14 @@ public class BasicChannelService implements ChannelService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public Channel find(UUID id) {
     return channelRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("채널을 찾을 수 없습니다."));
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<Channel> findAllByUserId(UUID userId) {
     List<Channel> allChannels = channelRepository.findAll();
 
@@ -79,17 +82,16 @@ public class BasicChannelService implements ChannelService {
     }
 
     channel.update(name, channel.getType(), description);
-    channelRepository.save(channel);
     return channel;
   }
 
   @Override
   public void delete(UUID id) {
-    channelRepository.findById(id)
+    Channel channel = channelRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("삭제할 채널을 찾을 수 없습니다."));
 
     messageRepository.deleteByChannelId(id);
     readStatusRepository.deleteByChannelId(id);
-    channelRepository.delete(id);
+    channelRepository.delete(channel);
   }
 }

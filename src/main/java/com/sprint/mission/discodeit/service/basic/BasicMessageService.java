@@ -11,24 +11,24 @@ import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
-import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class BasicMessageService implements MessageService {
 
   private final MessageRepository messageRepository;
   private final ChannelRepository channelRepository;
   private final UserRepository userRepository;
-  private final BinaryContentRepository binaryContentRepository;
 
   @Override
   public Message create(UUID channelId, UUID authorId, String content,
       List<MultipartFile> attachments) {
-
     Channel channel = channelRepository.findById(channelId)
         .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 채널입니다."));
     User author = userRepository.findById(authorId)
@@ -44,7 +44,6 @@ public class BasicMessageService implements MessageService {
           String fileUrl = "/files/" + fileName;
 
           BinaryContent attachment = new BinaryContent(fileName, fileUrl, fileSize);
-          binaryContentRepository.save(attachment);
           message.addAttachment(attachment);
         }
       }
@@ -54,12 +53,14 @@ public class BasicMessageService implements MessageService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public Message read(UUID id) {
     return messageRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("메시지를 찾을 수 없습니다."));
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<Message> findAllByChannelId(UUID channelId) {
     return messageRepository.findByChannelId(channelId);
   }
@@ -68,9 +69,7 @@ public class BasicMessageService implements MessageService {
   public Message update(UUID id, String newContent) {
     Message message = messageRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("수정할 메시지를 찾을 수 없습니다."));
-
     message.update(newContent);
-    messageRepository.save(message);
     return message;
   }
 
@@ -78,9 +77,6 @@ public class BasicMessageService implements MessageService {
   public void delete(UUID id) {
     Message message = messageRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("삭제할 메시지를 찾을 수 없습니다."));
-    for (BinaryContent file : message.getAttachments()) {
-      binaryContentRepository.deleteById(file.getId());
-    }
-    messageRepository.delete(id);
+    messageRepository.delete(message);
   }
 }

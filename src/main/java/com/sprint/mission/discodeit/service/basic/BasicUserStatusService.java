@@ -8,12 +8,14 @@ import com.sprint.mission.discodeit.service.UserStatusService;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class BasicUserStatusService implements UserStatusService {
 
   private final UserStatusRepository userStatusRepository;
@@ -34,12 +36,14 @@ public class BasicUserStatusService implements UserStatusService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public UserStatus find(UUID id) {
     return userStatusRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("상태 정보를 찾을 수 없습니다."));
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<UserStatus> findAll() {
     return userStatusRepository.findAll();
   }
@@ -49,7 +53,6 @@ public class BasicUserStatusService implements UserStatusService {
     UserStatus status = userStatusRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("상태 정보를 찾을 수 없습니다."));
     status.updateActivity();
-    userStatusRepository.save(status);
     return status;
   }
 
@@ -58,13 +61,13 @@ public class BasicUserStatusService implements UserStatusService {
     UserStatus status = userStatusRepository.findByUserId(userId)
         .orElseThrow(() -> new IllegalArgumentException("해당 유저의 상태 정보를 찾을 수 없습니다."));
     status.updateActivity();
-    userStatusRepository.save(status);
     return status;
   }
 
   @Override
   public void delete(UUID id) {
-    find(id);
-    userStatusRepository.delete(id);
+    UserStatus status = userStatusRepository.findById(id)
+        .orElseThrow(() -> new IllegalArgumentException("상태 정보를 찾을 수 없습니다."));
+    userStatusRepository.delete(status);
   }
 }
