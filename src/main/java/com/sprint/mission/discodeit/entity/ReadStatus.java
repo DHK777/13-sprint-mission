@@ -1,33 +1,39 @@
 package com.sprint.mission.discodeit.entity;
 
+import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
+import jakarta.persistence.*;
 import lombok.Getter;
 
-import java.io.Serializable;
 import java.time.Instant;
-import java.util.UUID;
 
+@Entity
+@Table(name = "read_statuses", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"user_id", "channel_id"})
+})
 @Getter
-public class ReadStatus implements Serializable {
-    private static final long serialVersionUID = 1L;
-    private final UUID id;
-    private final UUID userId;    // 누가
-    private final UUID channelId; // 어떤 채널을
-    private Instant lastReadAt;   // 언제 마지막으로 읽었나
-    private final Instant createdAt;
-    private Instant updatedAt;
+public class ReadStatus extends BaseUpdatableEntity {
 
-    public ReadStatus(UUID userId, UUID channelId) {
-        this.id = UUID.randomUUID();
-        this.userId = userId;
-        this.channelId = channelId;
-        this.lastReadAt = Instant.now();
-        this.createdAt = Instant.now();
-        this.updatedAt = this.createdAt;
-    }
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id", nullable = false)
+  private User user;
 
-    // 메시지를 읽었을 때 시간을 갱신
-    public void updateLastReadAt() {
-        this.lastReadAt = Instant.now();
-        this.updatedAt = Instant.now();
-    }
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "channel_id", nullable = false)
+  private Channel channel;
+
+  @Column(name = "last_read_at", nullable = false)
+  private Instant lastReadAt;
+
+  protected ReadStatus() {
+  }
+
+  public ReadStatus(User user, Channel channel, Instant lastReadAt) {
+    this.user = user;
+    this.channel = channel;
+    this.lastReadAt = lastReadAt != null ? lastReadAt : Instant.now();
+  }
+
+  public void updateLastReadAt() {
+    this.lastReadAt = Instant.now();
+  }
 }

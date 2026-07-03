@@ -1,6 +1,8 @@
 package com.sprint.mission.discodeit.service.basic;
 
+import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ReadStatus;
+import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
@@ -22,17 +24,16 @@ public class BasicReadStatusService implements ReadStatusService {
 
   @Override
   public ReadStatus create(UUID channelId, UUID userId, Instant lastReadAt) {
-    if (channelRepository.findById(channelId).isEmpty()) {
-      throw new IllegalArgumentException("존재하지 않는 채널입니다.");
-    }
-    if (userRepository.findById(userId).isEmpty()) {
-      throw new IllegalArgumentException("존재하지 않는 유저입니다.");
-    }
+    Channel channel = channelRepository.findById(channelId)
+        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 채널입니다."));
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+
     if (readStatusRepository.findByChannelIdAndUserId(channelId, userId).isPresent()) {
       throw new IllegalArgumentException("해당 유저는 이미 이 채널의 읽음 상태를 가지고 있습니다.");
     }
 
-    ReadStatus readStatus = new ReadStatus(channelId, userId);
+    ReadStatus readStatus = new ReadStatus(user, channel, lastReadAt);
     readStatusRepository.save(readStatus);
     return readStatus;
   }

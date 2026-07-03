@@ -15,8 +15,12 @@ public record UserStatusResponse(
 
   public static UserStatusResponse from(UserStatus entity) {
     return new UserStatusResponse(
-        entity.getId(), entity.getUserId(), entity.getLastActiveAt(),
-        entity.isOnline(), entity.getCreatedAt(), entity.getUpdatedAt()
+        entity.getId(),
+        entity.getUser().getId(),
+        entity.getLastActiveAt(),
+        entity.isOnline(),
+        entity.getCreatedAt(),
+        entity.getUpdatedAt()
     );
   }
 }

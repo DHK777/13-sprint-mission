@@ -3,9 +3,11 @@ package com.sprint.mission.discodeit.service.basic;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.ReadStatus;
+import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
+import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,7 @@ public class BasicChannelService implements ChannelService {
   private final ChannelRepository channelRepository;
   private final ReadStatusRepository readStatusRepository;
   private final MessageRepository messageRepository;
+  private final UserRepository userRepository;
 
   @Override
   public Channel createPublic(String name, String description) {
@@ -32,6 +35,16 @@ public class BasicChannelService implements ChannelService {
   public Channel createPrivate(List<UUID> participantIds) {
     Channel channel = new Channel("", ChannelType.PRIVATE, "");
     channelRepository.save(channel);
+
+    if (participantIds != null) {
+      for (UUID userId : participantIds) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+
+        ReadStatus readStatus = new ReadStatus(user, channel, channel.getCreatedAt());
+        readStatusRepository.save(readStatus);
+      }
+    }
     return channel;
   }
 
@@ -51,7 +64,7 @@ public class BasicChannelService implements ChannelService {
       } else {
         List<ReadStatus> myStatuses = readStatusRepository.findByUserId(userId);
         return myStatuses.stream()
-            .anyMatch(rs -> rs.getChannelId().equals(channel.getId()));
+            .anyMatch(rs -> rs.getChannel().getId().equals(channel.getId()));
       }
     }).toList();
   }

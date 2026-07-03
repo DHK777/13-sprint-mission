@@ -15,8 +15,12 @@ public record ReadStatusResponse(
 
   public static ReadStatusResponse from(ReadStatus entity) {
     return new ReadStatusResponse(
-        entity.getId(), entity.getUserId(), entity.getChannelId(),
-        entity.getLastReadAt(), entity.getCreatedAt(), entity.getUpdatedAt()
+        entity.getId(),
+        entity.getUser().getId(),
+        entity.getChannel().getId(),
+        entity.getLastReadAt(),
+        entity.getCreatedAt(),
+        entity.getUpdatedAt()
     );
   }
 }

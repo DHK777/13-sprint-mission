@@ -16,9 +16,13 @@ public record UserResponse(
 
   public static UserResponse from(User entity) {
     return new UserResponse(
-        entity.getId(), entity.getEmail(), entity.getUsername(),
-        entity.getStatusMessage(), entity.getProfileId(),
-        entity.getCreatedAt(), entity.getUpdatedAt()
+        entity.getId(),
+        entity.getEmail(),
+        entity.getUsername(),
+        entity.getStatusMessage(),
+        entity.getProfile() != null ? entity.getProfile().getId() : null,
+        entity.getCreatedAt(),
+        entity.getUpdatedAt()
     );
   }
 }

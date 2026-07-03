@@ -36,7 +36,7 @@ public class BasicUserService implements UserService {
     saveProfileImage(user, profile);
     userRepository.save(user);
 
-    UserStatus userStatus = new UserStatus(user.getId());
+    UserStatus userStatus = new UserStatus(user);
     userStatusRepository.save(userStatus);
     return user;
   }
@@ -77,8 +77,8 @@ public class BasicUserService implements UserService {
     User user = userRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("삭제할 유저를 찾을 수 없습니다."));
 
-    if (user.getProfileId() != null) {
-      binaryContentRepository.deleteById(user.getProfileId());
+    if (user.getProfile() != null) {
+      binaryContentRepository.deleteById(user.getProfile().getId());
     }
 
     userStatusRepository.deleteByUserId(user.getId());
@@ -98,7 +98,7 @@ public class BasicUserService implements UserService {
 
       BinaryContent profileImage = new BinaryContent(fileName, fileUrl, fileSize);
       binaryContentRepository.save(profileImage);
-      user.updateProfile(profileImage.getId());
+      user.updateProfile(profileImage);
     }
   }
 }

@@ -1,7 +1,9 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
+import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
@@ -26,14 +28,13 @@ public class BasicMessageService implements MessageService {
   @Override
   public Message create(UUID channelId, UUID authorId, String content,
       List<MultipartFile> attachments) {
-    if (channelRepository.findById(channelId).isEmpty()) {
-      throw new IllegalArgumentException("존재하지 않는 채널입니다.");
-    }
-    if (userRepository.findById(authorId).isEmpty()) {
-      throw new IllegalArgumentException("존재하지 않는 유저입니다.");
-    }
 
-    Message message = new Message(channelId, authorId, content);
+    Channel channel = channelRepository.findById(channelId)
+        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 채널입니다."));
+    User author = userRepository.findById(authorId)
+        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+
+    Message message = new Message(channel, author, content);
 
     if (attachments != null && !attachments.isEmpty()) {
       for (MultipartFile file : attachments) {
@@ -44,7 +45,7 @@ public class BasicMessageService implements MessageService {
 
           BinaryContent attachment = new BinaryContent(fileName, fileUrl, fileSize);
           binaryContentRepository.save(attachment);
-          message.addAttachmentId(attachment.getId());
+          message.addAttachment(attachment);
         }
       }
     }
@@ -77,8 +78,8 @@ public class BasicMessageService implements MessageService {
   public void delete(UUID id) {
     Message message = messageRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("삭제할 메시지를 찾을 수 없습니다."));
-    for (UUID fileId : message.getAttachmentIds()) {
-      binaryContentRepository.deleteById(fileId);
+    for (BinaryContent file : message.getAttachments()) {
+      binaryContentRepository.deleteById(file.getId());
     }
     messageRepository.delete(id);
   }

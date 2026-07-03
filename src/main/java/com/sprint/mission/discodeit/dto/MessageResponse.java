@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.dto;
 
+import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Message;
 import java.time.Instant;
 import java.util.List;
@@ -17,9 +18,13 @@ public record MessageResponse(
 
   public static MessageResponse from(Message entity) {
     return new MessageResponse(
-        entity.getId(), entity.getChannelId(), entity.getAuthorId(),
-        entity.getContent(), entity.getAttachmentIds(),
-        entity.getCreatedAt(), entity.getUpdatedAt()
+        entity.getId(),
+        entity.getChannel().getId(),
+        entity.getAuthor() != null ? entity.getAuthor().getId() : null,
+        entity.getContent(),
+        entity.getAttachments().stream().map(BinaryContent::getId).toList(),
+        entity.getCreatedAt(),
+        entity.getUpdatedAt()
     );
   }
 }
