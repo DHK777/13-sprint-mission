@@ -18,9 +18,6 @@ public class BinaryContent extends BaseEntity {
   @Column(nullable = false)
   private Long size;
 
-  @Column(nullable = false)
-  private byte[] bytes;
-
   @Column(name = "content_type", nullable = false, length = 100)
   private String contentType;
 
@@ -28,15 +25,13 @@ public class BinaryContent extends BaseEntity {
   }
 
   public BinaryContent(String fileName, String fileUrl, Long size) {
-    this(fileName, fileUrl, size, null, "application/octet-stream");
+    this(fileName, fileUrl, size, "application/octet-stream");
   }
 
-  public BinaryContent(String fileName, String fileUrl, Long size, byte[] bytes,
-      String contentType) {
+  public BinaryContent(String fileName, String fileUrl, Long size, String contentType) {
     this.fileName = fileName;
     this.fileUrl = fileUrl;
     this.size = size;
-    this.bytes = bytes;
     this.contentType = contentType;
   }
 }

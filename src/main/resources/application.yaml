@@ -21,3 +21,8 @@ logging:
   level:
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
+discodeit:
+  storage:
+    type: local
+    local:
+      root-path: ./uploads

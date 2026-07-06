@@ -15,8 +15,7 @@ public class BinaryContentMapper {
         entity.getId(),
         entity.getFileName(),
         entity.getSize(),
-        entity.getContentType(),
-        entity.getBytes()
+        entity.getContentType()
     );
   }
 }

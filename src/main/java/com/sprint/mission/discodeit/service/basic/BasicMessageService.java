@@ -8,6 +8,7 @@ import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.MessageService;
+import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,7 @@ public class BasicMessageService implements MessageService {
   private final MessageRepository messageRepository;
   private final ChannelRepository channelRepository;
   private final UserRepository userRepository;
+  private final BinaryContentStorage binaryContentStorage;
 
   @Override
   public Message create(UUID channelId, UUID authorId, String content,
@@ -35,19 +37,42 @@ public class BasicMessageService implements MessageService {
 
     Message message = new Message(channel, author, content);
 
-    if (attachments != null && !attachments.isEmpty()) {
+    if (attachments != null) {
       for (MultipartFile file : attachments) {
-        if (!file.isEmpty()) {
-          String fileName = file.getOriginalFilename();
-          long fileSize = file.getSize();
-          String fileUrl = "/files/" + fileName;
+        if (file.isEmpty()) {
+          continue;
+        }
 
-          BinaryContent attachment = new BinaryContent(fileName, fileUrl, fileSize);
-          message.addAttachment(attachment);
+        String fileName = file.getOriginalFilename();
+        long fileSize = file.getSize();
+        String contentType = file.getContentType();
+        String fileUrl = "/api/binaryContents/";
+
+        BinaryContent attachment = new BinaryContent(fileName, fileUrl, fileSize, contentType);
+        message.addAttachment(attachment);
+      }
+    }
+
+    messageRepository.save(message);
+
+    if (attachments != null) {
+      List<BinaryContent> savedAttachments = message.getAttachments();
+      int index = 0;
+
+      for (MultipartFile file : attachments) {
+        if (file.isEmpty()) {
+          continue;
+        }
+
+        try {
+          binaryContentStorage.put(savedAttachments.get(index).getId(), file.getBytes());
+          index++;
+        } catch (Exception e) {
+          throw new RuntimeException("메시지 첨부파일 저장 중 오류 발생", e);
         }
       }
     }
-    messageRepository.save(message);
+
     return message;
   }
 

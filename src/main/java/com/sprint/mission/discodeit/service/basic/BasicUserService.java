@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.service.UserService;
+import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ public class BasicUserService implements UserService {
 
   private final UserRepository userRepository;
   private final UserStatusRepository userStatusRepository;
+  private final BinaryContentStorage binaryContentStorage;
 
   @Override
   public User create(String email, String username, String password, MultipartFile profile) {
@@ -34,6 +36,14 @@ public class BasicUserService implements UserService {
     User user = new User(email, username, password);
     saveProfileImage(user, profile);
     userRepository.save(user);
+
+    if (profile != null && !profile.isEmpty()) {
+      try {
+        binaryContentStorage.put(user.getProfile().getId(), profile.getBytes());
+      } catch (Exception e) {
+        throw new RuntimeException("프로필 이미지 저장 중 오류 발생", e);
+      }
+    }
 
     UserStatus userStatus = new UserStatus(user);
     userStatusRepository.save(userStatus);
@@ -60,7 +70,17 @@ public class BasicUserService implements UserService {
         .orElseThrow(() -> new IllegalArgumentException("수정할 유저를 찾을 수 없습니다."));
 
     user.update(newEmail, newUsername, newPassword, statusMessage);
-    saveProfileImage(user, profile);
+
+    if (profile != null && !profile.isEmpty()) {
+      saveProfileImage(user, profile);
+      userRepository.saveAndFlush(user);
+
+      try {
+        binaryContentStorage.put(user.getProfile().getId(), profile.getBytes());
+      } catch (Exception e) {
+        throw new RuntimeException("프로필 이미지 업데이트 중 오류 발생", e);
+      }
+    }
     return user;
   }
 
@@ -83,9 +103,10 @@ public class BasicUserService implements UserService {
     if (profile != null && !profile.isEmpty()) {
       String fileName = profile.getOriginalFilename();
       long fileSize = profile.getSize();
-      String fileUrl = "/files/" + fileName;
+      String contentType = profile.getContentType();
+      String fileUrl = "/api/binaryContents/";
 
-      BinaryContent profileImage = new BinaryContent(fileName, fileUrl, fileSize);
+      BinaryContent profileImage = new BinaryContent(fileName, fileUrl, fileSize, contentType);
       user.updateProfile(profileImage);
     }
   }
