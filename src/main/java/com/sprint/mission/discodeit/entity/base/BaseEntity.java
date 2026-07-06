@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.entity.base;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -9,6 +10,7 @@ import java.util.UUID;
 
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
+@Getter
 public abstract class BaseEntity {
 
   @Id
@@ -18,12 +20,4 @@ public abstract class BaseEntity {
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
-
-  public UUID getId() {
-    return id;
-  }
-
-  public Instant getCreatedAt() {
-    return createdAt;
-  }
 }

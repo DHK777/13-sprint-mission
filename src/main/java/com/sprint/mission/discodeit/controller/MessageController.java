@@ -6,6 +6,9 @@ import com.sprint.mission.discodeit.dto.MessageUpdateRequest;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.service.MessageService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,9 +30,9 @@ public class MessageController {
 
   @Operation(summary = "메시지 전송 (파일 첨부 가능)")
   @io.swagger.v3.oas.annotations.parameters.RequestBody(
-      content = @io.swagger.v3.oas.annotations.media.Content(
+      content = @Content(
           mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-          encoding = @io.swagger.v3.oas.annotations.media.Encoding(
+          encoding = @Encoding(
               name = "messageCreateRequest",
               contentType = MediaType.APPLICATION_JSON_VALUE
           )
@@ -73,7 +76,7 @@ public class MessageController {
   }
 
   @Operation(summary = "메시지 삭제")
-  @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "No Content")
+  @ApiResponse(responseCode = "204", description = "No Content")
   @DeleteMapping("/{messageId}")
   public ResponseEntity<Void> deleteMessage(@PathVariable UUID messageId) {
     messageService.delete(messageId);

@@ -7,6 +7,7 @@ import com.sprint.mission.discodeit.dto.PublicChannelUpdateRequest;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.service.ChannelService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -58,7 +59,7 @@ public class ChannelController {
   }
 
   @Operation(summary = "Channel 삭제")
-  @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "No Content")
+  @ApiResponse(responseCode = "204", description = "No Content")
   @DeleteMapping("/{channelId}")
   public ResponseEntity<Void> deleteChannel(@PathVariable UUID channelId) {
     channelService.delete(channelId);

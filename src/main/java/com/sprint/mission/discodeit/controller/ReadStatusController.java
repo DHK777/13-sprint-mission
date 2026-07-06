@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.dto.ReadStatusUpdateRequest;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.service.ReadStatusService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -51,7 +52,7 @@ public class ReadStatusController {
   }
 
   @Operation(summary = "읽음 상태 삭제")
-  @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "No Content")
+  @ApiResponse(responseCode = "204", description = "No Content")
   @DeleteMapping("/{statusId}")
   public ResponseEntity<Void> deleteReadStatus(@PathVariable UUID statusId) {
     readStatusService.delete(statusId);

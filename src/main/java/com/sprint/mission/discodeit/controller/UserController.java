@@ -10,6 +10,9 @@ import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.service.UserStatusService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -43,9 +46,9 @@ public class UserController {
 
   @Operation(summary = "User 등록")
   @io.swagger.v3.oas.annotations.parameters.RequestBody(
-      content = @io.swagger.v3.oas.annotations.media.Content(
+      content = @Content(
           mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-          encoding = @io.swagger.v3.oas.annotations.media.Encoding(
+          encoding = @Encoding(
               name = "userCreateRequest",
               contentType = MediaType.APPLICATION_JSON_VALUE
           )
@@ -67,9 +70,9 @@ public class UserController {
 
   @Operation(summary = "User 정보 수정")
   @io.swagger.v3.oas.annotations.parameters.RequestBody(
-      content = @io.swagger.v3.oas.annotations.media.Content(
+      content = @Content(
           mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-          encoding = @io.swagger.v3.oas.annotations.media.Encoding(
+          encoding = @Encoding(
               name = "userUpdateRequest",
               contentType = MediaType.APPLICATION_JSON_VALUE
           )
@@ -93,7 +96,7 @@ public class UserController {
   }
 
   @Operation(summary = "User 삭제")
-  @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "No Content")
+  @ApiResponse(responseCode = "204", description = "No Content")
   @DeleteMapping("/{userId}")
   public ResponseEntity<Void> deleteUser(@PathVariable UUID userId) {
     userService.delete(userId);
