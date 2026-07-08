@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.controller;
 import com.sprint.mission.discodeit.dto.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.MessageResponse;
 import com.sprint.mission.discodeit.dto.MessageUpdateRequest;
+import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.service.MessageService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Encoding;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -60,11 +62,25 @@ public class MessageController {
 
   @Operation(summary = "채널 내 메시지 목록 조회")
   @GetMapping
-  public ResponseEntity<List<MessageResponse>> getAllMessagesByChannelId(
-      @RequestParam(name = "channelId") UUID channelId) {
-    List<MessageResponse> responses = messageService.findAllByChannelId(channelId).stream()
-        .map(MessageResponse::from).toList();
-    return ResponseEntity.ok(responses);
+  public ResponseEntity<PageResponse<MessageResponse>> getAllMessagesByChannelId(
+      @RequestParam(name = "channelId") UUID channelId,
+      @RequestParam(name = "page", defaultValue = "0") int page
+  ) {
+    Slice<Message> messageSlice = messageService.findAllByChannelId(channelId, page);
+
+    List<MessageResponse> content = messageSlice.getContent().stream()
+        .map(MessageResponse::from)
+        .toList();
+
+    PageResponse<MessageResponse> response = new PageResponse<>(
+        content,
+        messageSlice.getNumber(),
+        messageSlice.getSize(),
+        messageSlice.hasNext(),
+        null
+    );
+
+    return ResponseEntity.ok(response);
   }
 
   @Operation(summary = "메시지 수정")

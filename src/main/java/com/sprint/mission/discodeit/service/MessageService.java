@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.service;
 import com.sprint.mission.discodeit.entity.Message;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Slice;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface MessageService {
@@ -11,7 +12,7 @@ public interface MessageService {
 
   Message read(UUID id);
 
-  List<Message> findAllByChannelId(UUID channelId);
+  Slice<Message> findAllByChannelId(UUID channelId, int page);
 
   Message update(UUID id, String newContent);
 
