@@ -1,11 +1,13 @@
 package com.sprint.mission.discodeit.controller;
 
+import com.sprint.mission.discodeit.dto.ChannelResponse;
 import com.sprint.mission.discodeit.dto.PrivateChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.PublicChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.PublicChannelUpdateRequest;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.service.ChannelService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,46 +27,39 @@ public class ChannelController {
 
   @Operation(summary = "User가 참여 중인 Channel 목록 조회")
   @GetMapping
-  public ResponseEntity<List<Channel>> getAllChannels(
+  public ResponseEntity<List<ChannelResponse>> getAllChannels(
       @RequestParam(name = "userId") UUID userId) {
-
-    List<Channel> channels = channelService.findAllByUserId(userId);
-    return ResponseEntity.ok(channels);
+    List<ChannelResponse> responses = channelService.findAllByUserId(userId).stream()
+        .map(ChannelResponse::from).toList();
+    return ResponseEntity.ok(responses);
   }
 
   @Operation(summary = "PUBLIC Channel 생성")
-  @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Created")
   @PostMapping("/public")
-  public ResponseEntity<Channel> createPublicChannel(
+  public ResponseEntity<ChannelResponse> createPublicChannel(
       @RequestBody PublicChannelCreateRequest request) {
-
-    Channel response = channelService.createPublic(request.name(), request.description());
-    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    Channel entity = channelService.createPublic(request.name(), request.description());
+    return ResponseEntity.status(HttpStatus.CREATED).body(ChannelResponse.from(entity));
   }
 
   @Operation(summary = "Private Channel 생성")
-  @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Created")
   @PostMapping("/private")
-  public ResponseEntity<Channel> createPrivateChannel(
+  public ResponseEntity<ChannelResponse> createPrivateChannel(
       @RequestBody PrivateChannelCreateRequest request) {
-
-    Channel response = channelService.createPrivate(request.participantIds());
-    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    Channel entity = channelService.createPrivate(request.participantIds());
+    return ResponseEntity.status(HttpStatus.CREATED).body(ChannelResponse.from(entity));
   }
 
   @Operation(summary = "Channel 정보 수정")
   @PatchMapping("/{channelId}")
-  public ResponseEntity<Channel> updateChannel(
-      @PathVariable UUID channelId,
-      @RequestBody PublicChannelUpdateRequest request) {
-
-    Channel response = channelService.update(channelId, request.newName(),
-        request.newDescription());
-    return ResponseEntity.ok(response);
+  public ResponseEntity<ChannelResponse> updateChannel(
+      @PathVariable UUID channelId, @RequestBody PublicChannelUpdateRequest request) {
+    Channel entity = channelService.update(channelId, request.newName(), request.newDescription());
+    return ResponseEntity.ok(ChannelResponse.from(entity));
   }
 
   @Operation(summary = "Channel 삭제")
-  @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "No Content")
+  @ApiResponse(responseCode = "204", description = "No Content")
   @DeleteMapping("/{channelId}")
   public ResponseEntity<Void> deleteChannel(@PathVariable UUID channelId) {
     channelService.delete(channelId);

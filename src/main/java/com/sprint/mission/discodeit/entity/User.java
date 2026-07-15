@@ -1,45 +1,51 @@
 package com.sprint.mission.discodeit.entity;
 
+import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
+import jakarta.persistence.*;
 import lombok.Getter;
 
-import java.io.Serializable;
-import java.time.Instant;
-import java.util.UUID;
-
+@Entity
+@Table(name = "users")
 @Getter
-public class User implements Serializable {
-    private static final long serialVersionUID = 1L; // 직렬화 버전 고유 식별자
-    private final UUID id;
-    private final Instant createdAt;
-    private Instant updatedAt;
-    private UUID profileId;
+public class User extends BaseUpdatableEntity {
 
-    private String email;
-    private String username;
-    private String password;
-    private String statusMessage;
+  @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+  @JoinColumn(name = "profile_id")
+  private BinaryContent profile;
 
-    public User(String email, String username, String password) {
-        this.id = UUID.randomUUID();
-        this.createdAt = Instant.now();
-        this.updatedAt = this.createdAt;
+  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+  private UserStatus status;
 
-        this.email = email;
-        this.username = username;
-        this.password = password;
-        this.statusMessage = "";
-    }
+  @Column(nullable = false, unique = true, length = 100)
+  private String email;
 
-    public void update(String email, String username, String password, String statusMessage) {
-        this.email = email;
-        this.username = username;
-        this.password = password;
-        this.statusMessage = statusMessage;
-        this.updatedAt = Instant.now();
-    }
+  @Column(nullable = false, unique = true, length = 50)
+  private String username;
 
-    public void updateProfile(UUID profileId) {
-        this.profileId = profileId;
-        this.updatedAt = Instant.now();
-    }
+  @Column(nullable = false, length = 60)
+  private String password;
+
+  @Transient
+  private String statusMessage;
+
+  protected User() {
+  }
+
+  public User(String email, String username, String password) {
+    this.email = email;
+    this.username = username;
+    this.password = password;
+    this.statusMessage = "";
+  }
+
+  public void update(String email, String username, String password, String statusMessage) {
+    this.email = email;
+    this.username = username;
+    this.password = password;
+    this.statusMessage = statusMessage;
+  }
+
+  public void updateProfile(BinaryContent profile) {
+    this.profile = profile;
+  }
 }

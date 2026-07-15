@@ -5,12 +5,14 @@ import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class BasicBinaryContentService implements BinaryContentService {
 
   private final BinaryContentRepository binaryContentRepository;
@@ -27,19 +29,21 @@ public class BasicBinaryContentService implements BinaryContentService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public BinaryContent find(UUID id) {
     return binaryContentRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("해당 첨부파일을 찾을 수 없습니다."));
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<BinaryContent> findAllByIdIn(List<UUID> ids) {
-    return binaryContentRepository.findAllByIdIn(ids);
+    return binaryContentRepository.findAllById(ids);
   }
 
   @Override
   public void delete(UUID id) {
-    find(id);
-    binaryContentRepository.deleteById(id);
+    BinaryContent content = find(id);
+    binaryContentRepository.delete(content);
   }
 }

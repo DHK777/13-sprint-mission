@@ -1,15 +1,15 @@
 package com.sprint.mission.discodeit.service.basic;
 
-import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
-import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.service.UserService;
+import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -17,11 +17,12 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class BasicUserService implements UserService {
 
   private final UserRepository userRepository;
-  private final BinaryContentRepository binaryContentRepository;
   private final UserStatusRepository userStatusRepository;
+  private final BinaryContentStorage binaryContentStorage;
 
   @Override
   public User create(String email, String username, String password, MultipartFile profile) {
@@ -33,22 +34,31 @@ public class BasicUserService implements UserService {
     }
 
     User user = new User(email, username, password);
-
     saveProfileImage(user, profile);
     userRepository.save(user);
 
-    UserStatus userStatus = new UserStatus(user.getId());
+    if (profile != null && !profile.isEmpty()) {
+      try {
+        binaryContentStorage.put(user.getProfile().getId(), profile.getBytes());
+      } catch (Exception e) {
+        throw new RuntimeException("프로필 이미지 저장 중 오류 발생", e);
+      }
+    }
+
+    UserStatus userStatus = new UserStatus(user);
     userStatusRepository.save(userStatus);
     return user;
   }
 
   @Override
+  @Transactional(readOnly = true)
   public User find(UUID id) {
     return userRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("해당 유저를 찾을 수 없습니다."));
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<User> findAll() {
     return userRepository.findAll();
   }
@@ -56,20 +66,21 @@ public class BasicUserService implements UserService {
   @Override
   public User update(UUID id, String newEmail, String newUsername, String newPassword,
       String statusMessage, MultipartFile profile) {
-
     User user = userRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("수정할 유저를 찾을 수 없습니다."));
 
-    user.update(
-        newEmail,
-        newUsername,
-        newPassword,
-        statusMessage
-    );
+    user.update(newEmail, newUsername, newPassword, statusMessage);
 
-    saveProfileImage(user, profile);
+    if (profile != null && !profile.isEmpty()) {
+      saveProfileImage(user, profile);
+      userRepository.saveAndFlush(user);
 
-    userRepository.save(user);
+      try {
+        binaryContentStorage.put(user.getProfile().getId(), profile.getBytes());
+      } catch (Exception e) {
+        throw new RuntimeException("프로필 이미지 업데이트 중 오류 발생", e);
+      }
+    }
     return user;
   }
 
@@ -78,44 +89,25 @@ public class BasicUserService implements UserService {
     User user = userRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("삭제할 유저를 찾을 수 없습니다."));
 
-    if (user.getProfileId() != null) {
-      binaryContentRepository.deleteById(user.getProfileId());
-    }
-
     userStatusRepository.deleteByUserId(user.getId());
-    userRepository.delete(user.getId());
+    userRepository.delete(user);
   }
 
   @Override
-  public List<UserDto> findAllUsers() {
-    return userRepository.findAll().stream()
-        .map(user -> {
-          boolean isOnline = userStatusRepository.findByUserId(user.getId())
-              .map(UserStatus::isOnline)
-              .orElse(false);
-
-          return new UserDto(
-              user.getId(),
-              user.getCreatedAt(),
-              user.getUpdatedAt(),
-              user.getUsername(),
-              user.getEmail(),
-              user.getProfileId(),
-              isOnline
-          );
-        })
-        .toList();
+  @Transactional(readOnly = true)
+  public List<User> findAllUsers() {
+    return userRepository.findAll();
   }
 
   private void saveProfileImage(User user, MultipartFile profile) {
     if (profile != null && !profile.isEmpty()) {
       String fileName = profile.getOriginalFilename();
       long fileSize = profile.getSize();
-      String fileUrl = "/files/" + fileName;
+      String contentType = profile.getContentType();
+      String fileUrl = "/api/binaryContents/";
 
-      BinaryContent profileImage = new BinaryContent(fileName, fileUrl, fileSize);
-      binaryContentRepository.save(profileImage);
-      user.updateProfile(profileImage.getId());
+      BinaryContent profileImage = new BinaryContent(fileName, fileUrl, fileSize, contentType);
+      user.updateProfile(profileImage);
     }
   }
 }

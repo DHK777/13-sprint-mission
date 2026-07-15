@@ -1,41 +1,50 @@
 package com.sprint.mission.discodeit.entity;
 
+import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
+import jakarta.persistence.*;
 import lombok.Getter;
-import java.io.Serializable;
-import java.time.Instant;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
+@Entity
+@Table(name = "messages")
 @Getter
-public class Message implements Serializable {
-    private static final long serialVersionUID = 1L;
-    private final UUID id;
-    private final Instant createdAt;
-    private Instant updatedAt;
-    private List<UUID> attachmentIds = new ArrayList<>();
+public class Message extends BaseUpdatableEntity {
 
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "channel_id", nullable = false)
+  private Channel channel;
 
-    private final UUID channelId; // 메시지가 작성된 채널의 ID (작성 후 변경 불가)
-    private final UUID authorId;  // 메시지를 작성한 유저의 ID (작성 후 변경 불가)
-    private String content;       // 메시지 내용
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "author_id")
+  private User author;
 
-    public Message(UUID channelId, UUID authorId, String content) {
-        this.id = UUID.randomUUID();
-        this.createdAt = Instant.now();
-        this.updatedAt = this.createdAt;
+  @Column(columnDefinition = "TEXT")
+  private String content;
 
-        this.channelId = channelId;
-        this.authorId = authorId;
-        this.content = content;
-    }
+  @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+  @JoinTable(
+      name = "message_attachments",
+      joinColumns = @JoinColumn(name = "message_id"),
+      inverseJoinColumns = @JoinColumn(name = "attachment_id")
+  )
+  private final List<BinaryContent> attachments = new ArrayList<>();
 
-    public void update(String content) {
-        this.content = content;
-        this.updatedAt = Instant.now();
-    }
+  protected Message() {
+  }
 
-    public void addAttachmentId(UUID attachmentId) {
-        this.attachmentIds.add(attachmentId);
-    }
+  public Message(Channel channel, User author, String content) {
+    this.channel = channel;
+    this.author = author;
+    this.content = content;
+  }
+
+  public void update(String content) {
+    this.content = content;
+  }
+
+  public void addAttachment(BinaryContent attachment) {
+    this.attachments.add(attachment);
+  }
 }
