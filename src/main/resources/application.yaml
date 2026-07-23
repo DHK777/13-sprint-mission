@@ -10,6 +10,7 @@ spring:
     init:
       mode: always
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: validate
     show-sql: true

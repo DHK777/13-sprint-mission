@@ -14,7 +14,7 @@ public class PageResponseMapper {
     }
     return new PageResponse<>(
         slice.getContent(),
-        slice.getNumber(),
+        null,
         slice.getSize(),
         slice.hasNext(),
         null
@@ -27,7 +27,7 @@ public class PageResponseMapper {
     }
     return new PageResponse<>(
         page.getContent(),
-        page.getNumber(),
+        null,
         page.getSize(),
         page.hasNext(),
         page.getTotalElements()

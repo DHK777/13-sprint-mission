@@ -1,11 +1,8 @@
 package com.sprint.mission.discodeit.storage;
 
-import com.sprint.mission.discodeit.dto.BinaryContentDto;
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -14,10 +11,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Component
 @ConditionalOnProperty(name = "discodeit.storage.type", havingValue = "local")
@@ -46,13 +42,29 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
 
   @Override
   public UUID put(UUID id, byte[] data) {
+    Path filePath = resolvePath(id);
     try {
-      Path filePath = resolvePath(id);
       Files.write(filePath, data);
-      return id;
     } catch (IOException e) {
       throw new RuntimeException("파일 저장 실패: " + id, e);
     }
+
+    if (TransactionSynchronizationManager.isSynchronizationActive()) {
+      TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+        @Override
+        public void afterCompletion(int status) {
+          if (status == TransactionSynchronization.STATUS_ROLLED_BACK) {
+            try {
+              Files.deleteIfExists(filePath);
+            } catch (IOException e) {
+              System.err.println("롤백에 의한 파일 삭제 실패: " + filePath);
+            }
+          }
+        }
+      });
+    }
+
+    return id;
   }
 
   @Override
@@ -66,23 +78,12 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
   }
 
   @Override
-  public ResponseEntity<Resource> download(BinaryContentDto dto) {
+  public Resource download(UUID id) {
     try {
-      InputStream inputStream = get(dto.id());
-      Resource resource = new InputStreamResource(inputStream);
-
-      String encodedFileName = URLEncoder.encode(dto.fileName(), StandardCharsets.UTF_8)
-          .replace("+", "%20");
-
-      return ResponseEntity.ok()
-          .header(HttpHeaders.CONTENT_DISPOSITION,
-              "attachment; filename*=UTF-8''" + encodedFileName)
-          .contentType(MediaType.parseMediaType(dto.contentType()))
-          .contentLength(dto.size())
-          .body(resource);
-
+      InputStream inputStream = get(id);
+      return new InputStreamResource(inputStream);
     } catch (Exception e) {
-      return ResponseEntity.internalServerError().build();
+      throw new RuntimeException("파일 데이터를 불러올 수 없습니다: " + id, e);
     }
   }
 }
