@@ -2,9 +2,12 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.exception.InvalidPasswordException;
+import com.sprint.mission.discodeit.exception.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.AuthService;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,10 +23,10 @@ public class BasicAuthService implements AuthService {
   @Override
   public UserDto login(String username, String password) {
     User user = userRepository.findByUsername(username)
-        .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 유저명입니다."));
+        .orElseThrow(() -> new UserNotFoundException(Map.of("username", username)));
 
     if (!user.getPassword().equals(password)) {
-      throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+      throw new InvalidPasswordException();
     }
 
     return userMapper.toDto(user);

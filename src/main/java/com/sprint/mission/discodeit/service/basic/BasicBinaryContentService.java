@@ -2,10 +2,12 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.BinaryContentDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.exception.BinaryContentNotFoundException;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,7 +32,7 @@ public class BasicBinaryContentService implements BinaryContentService {
   @Override
   public BinaryContentDto find(UUID id) {
     BinaryContent content = binaryContentRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("해당 첨부파일을 찾을 수 없습니다."));
+        .orElseThrow(() -> new BinaryContentNotFoundException(Map.of("binaryContentId", id)));
     return binaryContentMapper.toDto(content);
   }
 
@@ -45,7 +47,7 @@ public class BasicBinaryContentService implements BinaryContentService {
   @Transactional
   public void delete(UUID id) {
     BinaryContent content = binaryContentRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("해당 첨부파일을 찾을 수 없습니다."));
+        .orElseThrow(() -> new BinaryContentNotFoundException(Map.of("binaryContentId", id)));
     binaryContentRepository.delete(content);
   }
 }

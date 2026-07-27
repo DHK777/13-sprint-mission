@@ -7,6 +7,9 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.exception.ChannelNotFoundException;
+import com.sprint.mission.discodeit.exception.MessageNotFoundException;
+import com.sprint.mission.discodeit.exception.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.MessageMapper;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
@@ -15,13 +18,16 @@ import com.sprint.mission.discodeit.service.MessageService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -37,11 +43,18 @@ public class BasicMessageService implements MessageService {
   @Transactional
   public MessageDto create(UUID channelId, UUID authorId, String content,
       List<FileUploadDto> files) {
+    log.debug("Message 생성 요청 - channelId: {}, authorId: {}", channelId, authorId);
 
     Channel channel = channelRepository.findById(channelId)
-        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 채널입니다."));
+        .orElseThrow(() -> {
+          log.warn("Message 생성 실패 - 존재하지 않는 channelId: {}", channelId);
+          return new ChannelNotFoundException(Map.of("channelId", channelId));
+        });
     User author = userRepository.findById(authorId)
-        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+        .orElseThrow(() -> {
+          log.warn("Message 생성 실패 - 존재하지 않는 authorId: {}", authorId);
+          return new UserNotFoundException(Map.of("authorId", authorId));
+        });
 
     Message message = new Message(channel, author, content);
 
@@ -76,18 +89,20 @@ public class BasicMessageService implements MessageService {
           binaryContentStorage.put(savedAttachments.get(index).getId(), file.bytes());
           index++;
         } catch (Exception e) {
+          log.error("Message 첨부파일 저장 중 서버 오류 발생 - messageId: {}", message.getId(), e);
           throw new RuntimeException("메시지 첨부파일 저장 중 오류 발생", e);
         }
       }
     }
 
+    log.info("Message 생성 완료 - messageId: {}", message.getId());
     return messageMapper.toDto(message);
   }
 
   @Override
   public MessageDto read(UUID id) {
     Message message = messageRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("메시지를 찾을 수 없습니다."));
+        .orElseThrow(() -> new MessageNotFoundException(Map.of("messageId", id)));
 
     return messageMapper.toDto(message);
   }
@@ -119,20 +134,29 @@ public class BasicMessageService implements MessageService {
   @Override
   @Transactional
   public MessageDto update(UUID id, String newContent) {
+    log.debug("Message 수정 요청 - messageId: {}", id);
     Message message = messageRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("수정할 메시지를 찾을 수 없습니다."));
+        .orElseThrow(() -> {
+          log.warn("Message 수정 실패 - 존재하지 않는 messageId: {}", id);
+          return new MessageNotFoundException(Map.of("messageId", id));
+        });
 
     message.update(newContent);
-
+    log.info("Message 수정 완료 - messageId: {}", id);
     return messageMapper.toDto(message);
   }
 
   @Override
   @Transactional
   public void delete(UUID id) {
+    log.debug("Message 삭제 요청 - messageId: {}", id);
     Message message = messageRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("삭제할 메시지를 찾을 수 없습니다."));
+        .orElseThrow(() -> {
+          log.warn("Message 삭제 실패 - 존재하지 않는 messageId: {}", id);
+          return new MessageNotFoundException(Map.of("messageId", id));
+        });
 
     messageRepository.delete(message);
+    log.info("Message 삭제 완료 - messageId: {}", id);
   }
 }

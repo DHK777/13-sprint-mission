@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.InputStreamResource;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+@Slf4j
 @Component
 @ConditionalOnProperty(name = "discodeit.storage.type", havingValue = "local")
 public class LocalBinaryContentStorage implements BinaryContentStorage {
@@ -45,7 +47,9 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
     Path filePath = resolvePath(id);
     try {
       Files.write(filePath, data);
+      log.info("파일 로컬 저장 성공 - fileId: {}, path: {}", id, filePath);
     } catch (IOException e) {
+      log.error("파일 저장 실패 - fileId: {}", id, e);
       throw new RuntimeException("파일 저장 실패: " + id, e);
     }
 
@@ -56,8 +60,9 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
           if (status == TransactionSynchronization.STATUS_ROLLED_BACK) {
             try {
               Files.deleteIfExists(filePath);
+              log.info("트랜잭션 롤백으로 인한 로컬 파일 삭제 완료 - path: {}", filePath);
             } catch (IOException e) {
-              System.err.println("롤백에 의한 파일 삭제 실패: " + filePath);
+              log.error("롤백에 의한 파일 삭제 실패: {}", filePath, e);
             }
           }
         }
