@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -38,7 +39,7 @@ public class BinaryContentController {
   @Operation(summary = "첨부파일 메타데이터 생성")
   @PostMapping
   public ResponseEntity<BinaryContentDto> createBinaryContent(
-      @RequestBody BinaryContentCreateRequest request) {
+      @Valid @RequestBody BinaryContentCreateRequest request) {
     BinaryContentDto response = binaryContentService.create(
         request.fileName(),
         request.fileUrl(),

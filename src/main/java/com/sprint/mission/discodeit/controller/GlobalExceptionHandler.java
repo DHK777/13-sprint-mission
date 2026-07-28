@@ -2,9 +2,14 @@ package com.sprint.mission.discodeit.controller;
 
 import com.sprint.mission.discodeit.dto.ErrorResponse;
 import com.sprint.mission.discodeit.exception.DiscodeitException;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -21,6 +26,31 @@ public class GlobalExceptionHandler {
 
     return ResponseEntity
         .status(e.getErrorCode().getStatus())
+        .body(response);
+  }
+
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  public ResponseEntity<ErrorResponse> handleValidationException(
+      MethodArgumentNotValidException e) {
+    Map<String, Object> validationDetails = new HashMap<>();
+
+    for (FieldError fieldError : e.getBindingResult().getFieldErrors()) {
+      validationDetails.put(fieldError.getField(), fieldError.getDefaultMessage());
+    }
+
+    log.warn("Validation Failed: {}", validationDetails);
+
+    ErrorResponse response = new ErrorResponse(
+        Instant.now(),
+        "VALIDATION_FAILED",
+        "입력값이 올바르지 않습니다.",
+        validationDetails,
+        e.getClass().getSimpleName(),
+        HttpStatus.BAD_REQUEST.value()
+    );
+
+    return ResponseEntity
+        .status(HttpStatus.BAD_REQUEST)
         .body(response);
   }
 

@@ -7,6 +7,7 @@ import com.sprint.mission.discodeit.service.ReadStatusService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +34,7 @@ public class ReadStatusController {
   @Operation(summary = "읽음 상태 생성")
   @PostMapping
   public ResponseEntity<ReadStatusDto> createReadStatus(
-      @RequestBody ReadStatusCreateRequest request) {
+      @Valid @RequestBody ReadStatusCreateRequest request) {
     ReadStatusDto response = readStatusService.create(
         request.channelId(), request.userId(), request.lastReadAt()
     );
@@ -50,7 +51,7 @@ public class ReadStatusController {
   @Operation(summary = "읽음 상태 업데이트 (마지막 읽은 시간 갱신)")
   @PatchMapping("/{statusId}")
   public ResponseEntity<ReadStatusDto> updateReadStatus(
-      @PathVariable UUID statusId, @RequestBody ReadStatusUpdateRequest request) {
+      @PathVariable UUID statusId, @Valid @RequestBody ReadStatusUpdateRequest request) {
     ReadStatusDto response = readStatusService.update(statusId, request.newLastReadAt());
     return ResponseEntity.ok(response);
   }
