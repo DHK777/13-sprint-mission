@@ -1,49 +1,53 @@
 package com.sprint.mission.discodeit.service.basic;
 
+import com.sprint.mission.discodeit.dto.BinaryContentDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.exception.BinaryContentNotFoundException;
+import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.UUID;
-
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class BasicBinaryContentService implements BinaryContentService {
 
   private final BinaryContentRepository binaryContentRepository;
+  private final BinaryContentMapper binaryContentMapper;
 
   @Override
-  public BinaryContent create(String fileName, String fileUrl, Long size) {
-    BinaryContent content = new BinaryContent(
-        fileName,
-        fileUrl,
-        size
-    );
+  @Transactional
+  public BinaryContentDto create(String fileName, String fileUrl, Long size) {
+    BinaryContent content = new BinaryContent(fileName, fileUrl, size);
     binaryContentRepository.save(content);
-    return content;
+    return binaryContentMapper.toDto(content);
   }
 
   @Override
-  @Transactional(readOnly = true)
-  public BinaryContent find(UUID id) {
-    return binaryContentRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("해당 첨부파일을 찾을 수 없습니다."));
+  public BinaryContentDto find(UUID id) {
+    BinaryContent content = binaryContentRepository.findById(id)
+        .orElseThrow(() -> new BinaryContentNotFoundException(Map.of("binaryContentId", id)));
+    return binaryContentMapper.toDto(content);
   }
 
   @Override
-  @Transactional(readOnly = true)
-  public List<BinaryContent> findAllByIdIn(List<UUID> ids) {
-    return binaryContentRepository.findAllById(ids);
+  public List<BinaryContentDto> findAllByIdIn(List<UUID> ids) {
+    return binaryContentRepository.findAllById(ids).stream()
+        .map(binaryContentMapper::toDto)
+        .toList();
   }
 
   @Override
+  @Transactional
   public void delete(UUID id) {
-    BinaryContent content = find(id);
+    BinaryContent content = binaryContentRepository.findById(id)
+        .orElseThrow(() -> new BinaryContentNotFoundException(Map.of("binaryContentId", id)));
     binaryContentRepository.delete(content);
   }
 }

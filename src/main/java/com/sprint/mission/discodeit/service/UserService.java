@@ -1,23 +1,22 @@
 package com.sprint.mission.discodeit.service;
 
-import com.sprint.mission.discodeit.entity.User;
-
+import com.sprint.mission.discodeit.dto.FileUploadDto;
+import com.sprint.mission.discodeit.dto.UserDto;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService {
 
-  User create(String email, String username, String password, MultipartFile profile);
+  UserDto create(String email, String username, String password, FileUploadDto profile);
 
-  User find(UUID id);
+  UserDto find(UUID id);
 
-  List<User> findAll();
+  List<UserDto> findAll();
 
-  User update(UUID id, String newEmail, String newUsername, String newPassword,
-      String statusMessage, MultipartFile profile);
+  UserDto update(UUID id, String newEmail, String newUsername, String newPassword,
+      String statusMessage, FileUploadDto profile);
 
   void delete(UUID id);
 
-  List<User> findAllUsers();
+  List<UserDto> findAllUsers();
 }
