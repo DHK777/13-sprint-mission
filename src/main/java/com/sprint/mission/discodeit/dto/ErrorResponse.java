@@ -16,7 +16,7 @@ public record ErrorResponse(
   public static ErrorResponse from(DiscodeitException e) {
     return new ErrorResponse(
         e.getTimestamp(),
-        e.getErrorCode().name(),
+        e.getErrorCode().getCode(),
         e.getErrorCode().getMessage(),
         e.getDetails(),
         e.getClass().getSimpleName(),

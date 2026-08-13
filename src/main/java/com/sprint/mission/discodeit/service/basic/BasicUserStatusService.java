@@ -46,7 +46,7 @@ public class BasicUserStatusService implements UserStatusService {
   }
 
   @Override
-  public UserStatusDto find(UUID id) {
+  public UserStatusDto findById(UUID id) {
     UserStatus status = userStatusRepository.findById(id)
         .orElseThrow(() -> new UserStatusNotFoundException(Map.of("statusId", id)));
 

@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.storage;
 
+import com.sprint.mission.discodeit.dto.BinaryContentDto;
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -83,12 +85,24 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
   }
 
   @Override
-  public Resource download(UUID id) {
+  public ResponseEntity<Resource> download(BinaryContentDto dto) {
     try {
-      InputStream inputStream = get(id);
-      return new InputStreamResource(inputStream);
+      InputStream inputStream = get(dto.id());
+      Resource resource = new InputStreamResource(inputStream);
+
+      String encodedFileName = java.net.URLEncoder.encode(dto.fileName(),
+              java.nio.charset.StandardCharsets.UTF_8)
+          .replace("+", "%20");
+
+      return org.springframework.http.ResponseEntity.ok()
+          .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+              "attachment; filename*=UTF-8''" + encodedFileName)
+          .contentType(org.springframework.http.MediaType.parseMediaType(dto.contentType()))
+          .contentLength(dto.size())
+          .body(resource);
+
     } catch (Exception e) {
-      throw new RuntimeException("파일 데이터를 불러올 수 없습니다: " + id, e);
+      throw new RuntimeException("파일 데이터를 불러올 수 없습니다: " + dto.id(), e);
     }
   }
 }
