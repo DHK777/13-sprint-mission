@@ -9,7 +9,7 @@ public interface UserStatusService {
 
   UserStatusDto create(UUID userId);
 
-  UserStatusDto find(UUID id);
+  UserStatusDto findById(UUID id);
 
   List<UserStatusDto> findAll();
 

@@ -7,16 +7,11 @@ import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -71,25 +66,12 @@ public class BinaryContentController {
 
   @Operation(summary = "파일 다운로드")
   @GetMapping("/{binaryContentId}/download")
-  public ResponseEntity<Resource> download(@PathVariable UUID binaryContentId) {
+  public ResponseEntity<?> download(@PathVariable UUID binaryContentId) {
     log.debug("파일 다운로드 요청 - binaryContentId: {}", binaryContentId);
 
     try {
       BinaryContentDto dto = binaryContentService.find(binaryContentId);
-      Resource resource = binaryContentStorage.download(binaryContentId);
-
-      String encodedFileName = URLEncoder.encode(dto.fileName(), StandardCharsets.UTF_8)
-          .replace("+", "%20");
-
-      log.info("파일 다운로드 성공 - fileName: {}, size: {}", dto.fileName(), dto.size());
-
-      return ResponseEntity.ok()
-          .header(HttpHeaders.CONTENT_DISPOSITION,
-              "attachment; filename*=UTF-8''" + encodedFileName)
-          .contentType(MediaType.parseMediaType(dto.contentType()))
-          .contentLength(dto.size())
-          .body(resource);
-
+      return binaryContentStorage.download(dto);
     } catch (Exception e) {
       log.error("파일 다운로드 중 서버 오류 발생 - binaryContentId: {}", binaryContentId, e);
       throw new RuntimeException("파일 다운로드 중 오류가 발생했습니다.", e);

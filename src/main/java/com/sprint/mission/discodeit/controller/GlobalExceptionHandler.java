@@ -85,4 +85,20 @@ public class GlobalExceptionHandler {
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
         .body(response);
   }
+
+  @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+  public ResponseEntity<ErrorResponse> handleNoResourceFoundException(
+      org.springframework.web.servlet.resource.NoResourceFoundException e) {
+    ErrorResponse response = ErrorResponse.of(
+        "NOT_FOUND",
+        "요청하신 리소스를 찾을 수 없습니다.",
+        e.getClass().getSimpleName(),
+        HttpStatus.NOT_FOUND.value()
+    );
+
+    return ResponseEntity
+        .status(HttpStatus.NOT_FOUND)
+        .body(response);
+  }
 }
+  
