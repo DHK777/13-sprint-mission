@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +32,7 @@ public class BasicUserService implements UserService {
   private final UserStatusRepository userStatusRepository;
   private final BinaryContentStorage binaryContentStorage;
   private final UserMapper userMapper;
+  private final PasswordEncoder passwordEncoder;
 
   @Override
   @Transactional
@@ -47,7 +49,9 @@ public class BasicUserService implements UserService {
       throw new UserAlreadyExistsException(ErrorCode.DUPLICATE_EMAIL, Map.of("email", email));
     }
 
-    User user = new User(email, username, password);
+    String encodedPassword = passwordEncoder.encode(password);
+
+    User user = new User(email, username, encodedPassword);
     saveProfileImage(user, profile);
     userRepository.save(user);
 
