@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.service.basic;
 import com.sprint.mission.discodeit.dto.FileUploadDto;
 import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.exception.ErrorCode;
@@ -131,6 +132,23 @@ public class BasicUserService implements UserService {
     userStatusRepository.deleteByUserId(user.getId());
     userRepository.delete(user);
     log.info("User 삭제 완료 - userId: {}", id);
+  }
+
+  @Override
+  @Transactional
+  public UserDto updateRole(UUID userId, Role newRole) {
+    log.debug("User 권한 수정 요청 - userId: {}, role: {}", userId, newRole);
+
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new UserNotFoundException(
+            Map.of("userId", userId)
+        ));
+
+    user.updateRole(newRole);
+
+    log.info("User 권한 수정 완료 - userId: {}, role: {}", userId, newRole);
+
+    return userMapper.toDto(user);
   }
 
   private void saveProfileImage(User user, FileUploadDto profile) {
