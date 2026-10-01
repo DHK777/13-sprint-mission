@@ -14,6 +14,8 @@ public enum ErrorCode {
   DUPLICATE_EMAIL(HttpStatus.CONFLICT, "U-004", "이미 가입된 이메일입니다."),
   INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "U-005", "비밀번호가 일치하지 않습니다."),
 
+  INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "A-001", "유효하지 않은 리프레시 토큰입니다."),
+
   CHANNEL_NOT_FOUND(HttpStatus.NOT_FOUND, "C-001", "채널을 찾을 수 없습니다."),
   PRIVATE_CHANNEL_UPDATE(HttpStatus.BAD_REQUEST, "C-002", "Private 채널은 수정할 수 없습니다."),
 
@@ -25,7 +27,7 @@ public enum ErrorCode {
   DUPLICATE_READ_STATUS(HttpStatus.CONFLICT, "S-004", "해당 유저는 이미 이 채널의 읽음 상태를 가지고 있습니다."),
 
   BINARY_CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "B-001", "해당 첨부파일을 찾을 수 없습니다.");
-
+  
   private final HttpStatus status;
   private final String code;
   private final String message;
