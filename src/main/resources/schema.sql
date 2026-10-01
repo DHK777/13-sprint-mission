@@ -8,12 +8,13 @@ DROP TABLE IF EXISTS binary_contents CASCADE;
 
 CREATE TABLE binary_contents
 (
-    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id           UUID PRIMARY KEY                  DEFAULT gen_random_uuid(),
     created_at   TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at   TIMESTAMP WITH TIME ZONE,
     file_name    VARCHAR(255)             NOT NULL,
     size         BIGINT                   NOT NULL,
     content_type VARCHAR(100)             NOT NULL,
-    bytes        BYTEA                    NOT NULL
+    status       VARCHAR(20)              NOT NULL DEFAULT 'PROCESSING'
 );
 
 CREATE TABLE channels

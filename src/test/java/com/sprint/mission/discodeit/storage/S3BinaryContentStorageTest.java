@@ -1,9 +1,11 @@
+
 package com.sprint.mission.discodeit.storage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.sprint.mission.discodeit.dto.BinaryContentDto;
+import com.sprint.mission.discodeit.entity.BinaryContentStatus;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -49,7 +51,13 @@ class S3BinaryContentStorageTest {
     assertEquals(testContent, retrievedContent);
     System.out.println("Get 완료: " + retrievedContent);
 
-    BinaryContentDto dto = new BinaryContentDto(id, "sample.txt", (long) data.length, "text/plain");
+    BinaryContentDto dto = new BinaryContentDto(
+        id,
+        "sample.txt",
+        (long) data.length,
+        "text/plain",
+        BinaryContentStatus.SUCCESS
+    );
 
     ResponseEntity<?> response = storage.download(dto);
     assertEquals(HttpStatus.FOUND, response.getStatusCode());

@@ -1,25 +1,27 @@
 package com.sprint.mission.discodeit.controller;
 
-import com.sprint.mission.discodeit.dto.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.BinaryContentDto;
+import com.sprint.mission.discodeit.dto.FileUploadDto;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Tag(name = "BinaryContent", description = "첨부파일 메타데이터 API")
@@ -31,15 +33,25 @@ public class BinaryContentController {
   private final BinaryContentService binaryContentService;
   private final BinaryContentStorage binaryContentStorage;
 
-  @Operation(summary = "첨부파일 메타데이터 생성")
-  @PostMapping
+  @Operation(summary = "첨부파일 생성")
+  @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<BinaryContentDto> createBinaryContent(
-      @Valid @RequestBody BinaryContentCreateRequest request) {
-    BinaryContentDto response = binaryContentService.create(
-        request.fileName(),
-        request.fileUrl(),
-        request.size()
+      @RequestPart("file") MultipartFile file
+  ) throws IOException {
+
+    if (file.isEmpty()) {
+      throw new IllegalArgumentException("파일이 비어 있습니다.");
+    }
+
+    FileUploadDto upload = new FileUploadDto(
+        file.getOriginalFilename() != null ? file.getOriginalFilename() : "file",
+        file.getContentType() != null ? file.getContentType() : "application/octet-stream",
+        file.getSize(),
+        file.getBytes()
     );
+
+    BinaryContentDto response = binaryContentService.create(upload);
+
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 

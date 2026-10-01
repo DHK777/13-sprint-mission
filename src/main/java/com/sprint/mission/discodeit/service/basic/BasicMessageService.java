@@ -7,6 +7,7 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.exception.ChannelNotFoundException;
 import com.sprint.mission.discodeit.exception.MessageNotFoundException;
 import com.sprint.mission.discodeit.exception.UserNotFoundException;
@@ -15,13 +16,13 @@ import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.MessageService;
-import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -36,7 +37,7 @@ public class BasicMessageService implements MessageService {
   private final MessageRepository messageRepository;
   private final ChannelRepository channelRepository;
   private final UserRepository userRepository;
-  private final BinaryContentStorage binaryContentStorage;
+  private final ApplicationEventPublisher eventPublisher;
   private final MessageMapper messageMapper;
 
   @Override
@@ -85,13 +86,14 @@ public class BasicMessageService implements MessageService {
           continue;
         }
 
-        try {
-          binaryContentStorage.put(savedAttachments.get(index).getId(), file.bytes());
-          index++;
-        } catch (Exception e) {
-          log.error("Message 첨부파일 저장 중 서버 오류 발생 - messageId: {}", message.getId(), e);
-          throw new RuntimeException("메시지 첨부파일 저장 중 오류 발생", e);
-        }
+        eventPublisher.publishEvent(
+            new BinaryContentCreatedEvent(
+                savedAttachments.get(index).getId(),
+                file.bytes()
+            )
+        );
+
+        index++;
       }
     }
 
