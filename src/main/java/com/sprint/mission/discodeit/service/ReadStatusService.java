@@ -13,7 +13,7 @@ public interface ReadStatusService {
 
   List<ReadStatusDto> findAllByUserId(UUID userId);
 
-  ReadStatusDto update(UUID id, Instant newLastReadAt);
+  ReadStatusDto update(UUID id, Instant newLastReadAt, Boolean newNotificationEnabled);
 
   void delete(UUID id);
 }

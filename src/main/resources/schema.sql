@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS notifications CASCADE;
 DROP TABLE IF EXISTS message_attachments CASCADE;
 DROP TABLE IF EXISTS read_statuses CASCADE;
 DROP TABLE IF EXISTS messages CASCADE;
@@ -40,6 +41,16 @@ CREATE TABLE users
     FOREIGN KEY (profile_id) REFERENCES binary_contents (id) ON DELETE SET NULL
 );
 
+CREATE TABLE notifications
+(
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at  TIMESTAMP WITH TIME ZONE NOT NULL,
+    receiver_id UUID                     NOT NULL,
+    title       VARCHAR(255)             NOT NULL,
+    content     TEXT                     NOT NULL,
+    FOREIGN KEY (receiver_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
 CREATE TABLE user_statuses
 (
     id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -64,12 +75,13 @@ CREATE TABLE messages
 
 CREATE TABLE read_statuses
 (
-    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    created_at   TIMESTAMP WITH TIME ZONE NOT NULL,
-    updated_at   TIMESTAMP WITH TIME ZONE,
-    user_id      UUID                     NOT NULL,
-    channel_id   UUID                     NOT NULL,
-    last_read_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    id                   UUID PRIMARY KEY                  DEFAULT gen_random_uuid(),
+    created_at           TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at           TIMESTAMP WITH TIME ZONE,
+    user_id              UUID                     NOT NULL,
+    channel_id           UUID                     NOT NULL,
+    last_read_at         TIMESTAMP WITH TIME ZONE NOT NULL,
+    notification_enabled BOOLEAN                  NOT NULL DEFAULT FALSE,
     UNIQUE (user_id, channel_id),
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     FOREIGN KEY (channel_id) REFERENCES channels (id) ON DELETE CASCADE

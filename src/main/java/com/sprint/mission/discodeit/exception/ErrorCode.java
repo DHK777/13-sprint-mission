@@ -26,8 +26,11 @@ public enum ErrorCode {
   READ_STATUS_NOT_FOUND(HttpStatus.NOT_FOUND, "S-003", "상태창을 찾을 수 없습니다."),
   DUPLICATE_READ_STATUS(HttpStatus.CONFLICT, "S-004", "해당 유저는 이미 이 채널의 읽음 상태를 가지고 있습니다."),
 
-  BINARY_CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "B-001", "해당 첨부파일을 찾을 수 없습니다.");
-  
+  BINARY_CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "B-001", "해당 첨부파일을 찾을 수 없습니다."),
+
+  NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "N-001", "알림을 찾을 수 없습니다."),
+  NOTIFICATION_ACCESS_DENIED(HttpStatus.FORBIDDEN, "N-002", "본인의 알림만 삭제할 수 있습니다.");
+
   private final HttpStatus status;
   private final String code;
   private final String message;

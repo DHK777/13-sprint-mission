@@ -7,6 +7,7 @@ import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.exception.UserAlreadyExistsException;
 import com.sprint.mission.discodeit.exception.UserNotFoundException;
@@ -142,7 +143,15 @@ public class BasicUserService implements UserService {
             Map.of("userId", userId)
         ));
 
-    user.updateRole(newRole);
+    Role previousRole = user.getRole();
+
+    if (previousRole != newRole) {
+      user.updateRole(newRole);
+
+      eventPublisher.publishEvent(
+          new RoleUpdatedEvent(userId, previousRole, newRole)
+      );
+    }
 
     log.info("User 권한 수정 완료 - userId: {}, role: {}", userId, newRole);
 
@@ -156,7 +165,10 @@ public class BasicUserService implements UserService {
       String contentType = profile.contentType();
       String fileUrl = "/api/binaryContents/";
 
-      BinaryContent profileImage = new BinaryContent(fileName, fileUrl, fileSize, contentType);
+      BinaryContent profileImage = new BinaryContent(
+          fileName, fileUrl, fileSize, contentType
+      );
+
       user.updateProfile(profileImage);
     }
   }
