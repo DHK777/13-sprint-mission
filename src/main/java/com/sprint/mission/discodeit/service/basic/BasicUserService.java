@@ -20,6 +20,8 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -40,6 +42,7 @@ public class BasicUserService implements UserService {
 
   @Override
   @Transactional
+  @CacheEvict(cacheNames = "users", allEntries = true)
   public UserDto create(String email, String username, String password, FileUploadDto profile) {
     log.debug("User 생성 요청 - email: {}, username: {}", email, username);
 
@@ -87,12 +90,14 @@ public class BasicUserService implements UserService {
   }
 
   @Override
+  @Cacheable(cacheNames = "users")
   public List<UserDto> findAllUsers() {
     return findAll();
   }
 
   @Override
   @Transactional
+  @CacheEvict(cacheNames = "users", allEntries = true)
   public UserDto update(UUID id, String newEmail, String newUsername, String newPassword,
       String statusMessage, FileUploadDto profile) {
     log.debug("User 수정 요청 - userId: {}", id);
@@ -119,6 +124,7 @@ public class BasicUserService implements UserService {
 
   @Override
   @Transactional
+  @CacheEvict(cacheNames = "users", allEntries = true)
   public void delete(UUID id) {
     log.debug("User 삭제 요청 - userId: {}", id);
     User user = userRepository.findById(id)
@@ -134,6 +140,7 @@ public class BasicUserService implements UserService {
 
   @Override
   @Transactional
+  @CacheEvict(cacheNames = "users", allEntries = true)
   @PreAuthorize("hasRole('ADMIN')")
   public UserDto updateRole(UUID userId, Role newRole) {
     log.debug("User 권한 수정 요청 - userId: {}, role: {}", userId, newRole);

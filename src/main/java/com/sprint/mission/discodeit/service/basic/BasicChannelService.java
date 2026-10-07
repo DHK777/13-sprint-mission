@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -44,6 +46,7 @@ public class BasicChannelService implements ChannelService {
 
   @Override
   @Transactional
+  @CacheEvict(cacheNames = "channelsByUser", allEntries = true)
   @PreAuthorize("hasRole('CHANNEL_MANAGER')")
   public ChannelDto createPublic(String name, String description) {
     log.debug("Public Channel 생성 요청 - name: {}", name);
@@ -55,6 +58,7 @@ public class BasicChannelService implements ChannelService {
 
   @Override
   @Transactional
+  @CacheEvict(cacheNames = "channelsByUser", allEntries = true)
   public ChannelDto createPrivate(List<UUID> participantIds) {
     log.debug("Private Channel 생성 요청 - 참여자 수: {}", participantIds.size());
     Channel channel = new Channel(null, ChannelType.PRIVATE, null);
@@ -81,6 +85,7 @@ public class BasicChannelService implements ChannelService {
   }
 
   @Override
+  @Cacheable(cacheNames = "channelsByUser", key = "#userId")
   public List<ChannelDto> findAllByUserId(UUID userId) {
     return readStatusRepository.findByUserId(userId).stream()
         .map(ReadStatus::getChannel)
@@ -90,6 +95,7 @@ public class BasicChannelService implements ChannelService {
 
   @Override
   @Transactional
+  @CacheEvict(cacheNames = "channelsByUser", allEntries = true)
   @PreAuthorize("hasRole('CHANNEL_MANAGER')")
   public ChannelDto update(UUID id, String name, String description) {
     log.debug("Channel 수정 요청 - channelId: {}", id);
@@ -111,6 +117,7 @@ public class BasicChannelService implements ChannelService {
 
   @Override
   @Transactional
+  @CacheEvict(cacheNames = "channelsByUser", allEntries = true)
   @PreAuthorize("hasRole('CHANNEL_MANAGER')")
   public void delete(UUID id) {
     log.debug("Channel 삭제 요청 - channelId: {}", id);

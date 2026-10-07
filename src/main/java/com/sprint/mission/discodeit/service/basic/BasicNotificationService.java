@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +28,7 @@ public class BasicNotificationService implements NotificationService {
 
   @Override
   @Transactional
+  @CacheEvict(cacheNames = "notificationsByUser", key = "#receiverId")
   public NotificationDto create(UUID receiverId, String title, String content) {
     User receiver = userRepository.findById(receiverId)
         .orElseThrow(() -> new UserNotFoundException(Map.of("userId", receiverId)));
@@ -37,6 +40,7 @@ public class BasicNotificationService implements NotificationService {
   }
 
   @Override
+  @Cacheable(cacheNames = "notificationsByUser", key = "#receiverId")
   public List<NotificationDto> findAllByReceiverId(UUID receiverId) {
     return notificationRepository.findByReceiverIdOrderByCreatedAtDesc(receiverId)
         .stream()
@@ -46,6 +50,7 @@ public class BasicNotificationService implements NotificationService {
 
   @Override
   @Transactional
+  @CacheEvict(cacheNames = "notificationsByUser", key = "#requesterId")
   public void delete(UUID notificationId, UUID requesterId) {
     Notification notification = notificationRepository.findById(notificationId)
         .orElseThrow(() -> new NotificationNotFoundException(
