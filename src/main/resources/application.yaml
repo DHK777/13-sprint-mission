@@ -51,6 +51,9 @@ management:
     web:
       exposure:
         include: "health,info,metrics,loggers"
+  observations:
+    annotations:
+      enabled: true
   info:
     env:
       enabled: true
