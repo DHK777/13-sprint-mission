@@ -1,12 +1,10 @@
 package com.sprint.mission.discodeit.controller;
 
-import com.sprint.mission.discodeit.dto.ErrorResponse;
 import com.sprint.mission.discodeit.dto.JwtDto;
+import com.sprint.mission.discodeit.dto.JwtRefreshResult;
 import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.dto.UserRoleUpdateRequest;
-import com.sprint.mission.discodeit.security.DiscodeitUserDetails;
-import com.sprint.mission.discodeit.security.DiscodeitUserDetailsService;
-import com.sprint.mission.discodeit.security.JwtTokenProvider;
+import com.sprint.mission.discodeit.security.JwtRefreshService;
 import com.sprint.mission.discodeit.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,8 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
   private final UserService userService;
-  private final JwtTokenProvider jwtTokenProvider;
-  private final DiscodeitUserDetailsService userDetailsService;
+  private final JwtRefreshService jwtRefreshService;
 
   @Operation(summary = "CSRF 토큰 발급")
   @GetMapping("/csrf-token")
@@ -65,53 +61,20 @@ public class AuthController {
 
   @Operation(summary = "액세스 토큰 재발급")
   @PostMapping("/refresh")
-  public ResponseEntity<?> refresh(
+  public ResponseEntity<JwtDto> refresh(
       @CookieValue(name = "REFRESH_TOKEN", required = false) String refreshToken,
       HttpServletResponse response
   ) {
-    if (refreshToken == null || !jwtTokenProvider.validateRefreshToken(refreshToken)) {
-      ErrorResponse errorResponse = ErrorResponse.of(
-          "INVALID_REFRESH_TOKEN",
-          "유효하지 않은 리프레시 토큰입니다.",
-          "InvalidRefreshToken",
-          HttpStatus.UNAUTHORIZED.value()
-      );
+    JwtRefreshResult result = jwtRefreshService.refresh(refreshToken);
 
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-    }
+    Cookie refreshTokenCookie =
+        new Cookie("REFRESH_TOKEN", result.refreshToken());
 
-    try {
-      String username = jwtTokenProvider.getUsername(refreshToken);
+    refreshTokenCookie.setHttpOnly(true);
+    refreshTokenCookie.setPath("/");
 
-      DiscodeitUserDetails userDetails =
-          (DiscodeitUserDetails) userDetailsService.loadUserByUsername(username);
+    response.addCookie(refreshTokenCookie);
 
-      String accessToken = jwtTokenProvider.refreshAccessToken(refreshToken);
-      String newRefreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
-
-      Cookie refreshTokenCookie =
-          new Cookie("REFRESH_TOKEN", newRefreshToken);
-
-      refreshTokenCookie.setHttpOnly(true);
-      refreshTokenCookie.setPath("/");
-
-      response.addCookie(refreshTokenCookie);
-
-      JwtDto jwtDto = new JwtDto(
-          userDetails.getUserDto(),
-          accessToken
-      );
-
-      return ResponseEntity.ok(jwtDto);
-    } catch (UsernameNotFoundException e) {
-      ErrorResponse errorResponse = ErrorResponse.of(
-          "INVALID_REFRESH_TOKEN",
-          "유효하지 않은 리프레시 토큰입니다.",
-          e.getClass().getSimpleName(),
-          HttpStatus.UNAUTHORIZED.value()
-      );
-
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-    }
+    return ResponseEntity.ok(result.jwtDto());
   }
 }

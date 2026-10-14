@@ -6,6 +6,8 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
+import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.exception.UserAlreadyExistsException;
 import com.sprint.mission.discodeit.exception.UserNotFoundException;
@@ -13,12 +15,14 @@ import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.service.UserService;
-import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -32,12 +36,13 @@ public class BasicUserService implements UserService {
 
   private final UserRepository userRepository;
   private final UserStatusRepository userStatusRepository;
-  private final BinaryContentStorage binaryContentStorage;
+  private final ApplicationEventPublisher eventPublisher;
   private final UserMapper userMapper;
   private final PasswordEncoder passwordEncoder;
 
   @Override
   @Transactional
+  @CacheEvict(cacheNames = "users", allEntries = true)
   public UserDto create(String email, String username, String password, FileUploadDto profile) {
     log.debug("User 생성 요청 - email: {}, username: {}", email, username);
 
@@ -58,12 +63,9 @@ public class BasicUserService implements UserService {
     userRepository.save(user);
 
     if (profile != null && profile.bytes() != null && profile.bytes().length > 0) {
-      try {
-        binaryContentStorage.put(user.getProfile().getId(), profile.bytes());
-      } catch (Exception e) {
-        log.error("User 프로필 이미지 저장 중 서버 오류 발생 - userId: {}", user.getId(), e);
-        throw new RuntimeException("프로필 이미지 저장 중 오류 발생", e);
-      }
+      eventPublisher.publishEvent(
+          new BinaryContentCreatedEvent(user.getProfile().getId(), profile.bytes())
+      );
     }
 
     UserStatus userStatus = new UserStatus(user);
@@ -88,12 +90,14 @@ public class BasicUserService implements UserService {
   }
 
   @Override
+  @Cacheable(cacheNames = "users")
   public List<UserDto> findAllUsers() {
     return findAll();
   }
 
   @Override
   @Transactional
+  @CacheEvict(cacheNames = "users", allEntries = true)
   public UserDto update(UUID id, String newEmail, String newUsername, String newPassword,
       String statusMessage, FileUploadDto profile) {
     log.debug("User 수정 요청 - userId: {}", id);
@@ -108,12 +112,10 @@ public class BasicUserService implements UserService {
     if (profile != null && profile.bytes() != null && profile.bytes().length > 0) {
       saveProfileImage(user, profile);
       userRepository.saveAndFlush(user);
-      try {
-        binaryContentStorage.put(user.getProfile().getId(), profile.bytes());
-      } catch (Exception e) {
-        log.error("User 프로필 이미지 업데이트 중 서버 오류 발생 - userId: {}", id, e);
-        throw new RuntimeException("프로필 이미지 업데이트 중 오류 발생", e);
-      }
+
+      eventPublisher.publishEvent(
+          new BinaryContentCreatedEvent(user.getProfile().getId(), profile.bytes())
+      );
     }
 
     log.info("User 수정 완료 - userId: {}", id);
@@ -122,6 +124,7 @@ public class BasicUserService implements UserService {
 
   @Override
   @Transactional
+  @CacheEvict(cacheNames = "users", allEntries = true)
   public void delete(UUID id) {
     log.debug("User 삭제 요청 - userId: {}", id);
     User user = userRepository.findById(id)
@@ -137,6 +140,7 @@ public class BasicUserService implements UserService {
 
   @Override
   @Transactional
+  @CacheEvict(cacheNames = "users", allEntries = true)
   @PreAuthorize("hasRole('ADMIN')")
   public UserDto updateRole(UUID userId, Role newRole) {
     log.debug("User 권한 수정 요청 - userId: {}, role: {}", userId, newRole);
@@ -146,7 +150,15 @@ public class BasicUserService implements UserService {
             Map.of("userId", userId)
         ));
 
-    user.updateRole(newRole);
+    Role previousRole = user.getRole();
+
+    if (previousRole != newRole) {
+      user.updateRole(newRole);
+
+      eventPublisher.publishEvent(
+          new RoleUpdatedEvent(userId, previousRole, newRole)
+      );
+    }
 
     log.info("User 권한 수정 완료 - userId: {}, role: {}", userId, newRole);
 
@@ -160,7 +172,10 @@ public class BasicUserService implements UserService {
       String contentType = profile.contentType();
       String fileUrl = "/api/binaryContents/";
 
-      BinaryContent profileImage = new BinaryContent(fileName, fileUrl, fileSize, contentType);
+      BinaryContent profileImage = new BinaryContent(
+          fileName, fileUrl, fileSize, contentType
+      );
+
       user.updateProfile(profileImage);
     }
   }

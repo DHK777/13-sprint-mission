@@ -8,13 +8,13 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 
 import com.sprint.mission.discodeit.dto.UserDto;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.UserAlreadyExistsException;
 import com.sprint.mission.discodeit.exception.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
-import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -23,6 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -34,12 +35,16 @@ class UserServiceTest {
 
   @Mock
   private UserRepository userRepository;
+
   @Mock
   private UserStatusRepository userStatusRepository;
+
   @Mock
-  private BinaryContentStorage binaryContentStorage;
+  private ApplicationEventPublisher eventPublisher;
+
   @Mock
   private UserMapper userMapper;
+
   @Mock
   private PasswordEncoder passwordEncoder;
 
@@ -55,9 +60,9 @@ class UserServiceTest {
     given(userRepository.existsByEmail(email)).willReturn(false);
     given(passwordEncoder.encode(password)).willReturn("encodedPassword");
 
-    User mockUser = new User(email, username, password);
-
-    UserDto mockUserDto = new UserDto(UUID.randomUUID(), username, email, null, true);
+    UserDto mockUserDto = new UserDto(
+        UUID.randomUUID(), username, email, null, true, Role.USER
+    );
 
     given(userMapper.toDto(any(User.class))).willReturn(mockUserDto);
 
@@ -98,14 +103,17 @@ class UserServiceTest {
     String newEmail = "new@test.com";
     String newUsername = "newUser";
 
-    UserDto updatedDto = new UserDto(userId, newUsername, newEmail, null, true);
+    UserDto updatedDto = new UserDto(
+        userId, newUsername, newEmail, null, true, Role.USER
+    );
 
     given(userRepository.findById(userId)).willReturn(Optional.of(existingUser));
     given(userMapper.toDto(any(User.class))).willReturn(updatedDto);
 
     // When
-    UserDto result = userService.update(userId, newEmail, newUsername,
-        "newPass", "Hello", null);
+    UserDto result = userService.update(
+        userId, newEmail, newUsername, "newPass", "Hello", null
+    );
 
     // Then
     assertThat(result.username()).isEqualTo(newUsername);
@@ -121,9 +129,9 @@ class UserServiceTest {
     given(userRepository.findById(nonExistentUserId)).willReturn(Optional.empty());
 
     // When & Then
-    assertThatThrownBy(() -> userService.update(nonExistentUserId,
-        "a", "b", "c", "d", null))
-        .isInstanceOf(UserNotFoundException.class);
+    assertThatThrownBy(() -> userService.update(
+        nonExistentUserId, "a", "b", "c", "d", null
+    )).isInstanceOf(UserNotFoundException.class);
   }
 
   @Test

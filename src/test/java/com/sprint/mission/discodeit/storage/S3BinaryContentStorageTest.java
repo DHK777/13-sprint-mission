@@ -1,9 +1,14 @@
+
 package com.sprint.mission.discodeit.storage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.mock;
 
 import com.sprint.mission.discodeit.dto.BinaryContentDto;
+import com.sprint.mission.discodeit.entity.BinaryContentStatus;
+import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.service.NotificationService;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -29,7 +34,11 @@ class S3BinaryContentStorageTest {
     String region = properties.getProperty("AWS_S3_REGION");
     String bucket = properties.getProperty("AWS_S3_BUCKET");
 
-    storage = new S3BinaryContentStorage("", "", region, bucket, 600L);
+    UserRepository userRepository = mock(UserRepository.class);
+    NotificationService notificationService = mock(NotificationService.class);
+
+    storage = new S3BinaryContentStorage("", "", region, bucket, 600L, userRepository,
+        notificationService);
   }
 
   @Test
@@ -49,7 +58,13 @@ class S3BinaryContentStorageTest {
     assertEquals(testContent, retrievedContent);
     System.out.println("Get 완료: " + retrievedContent);
 
-    BinaryContentDto dto = new BinaryContentDto(id, "sample.txt", (long) data.length, "text/plain");
+    BinaryContentDto dto = new BinaryContentDto(
+        id,
+        "sample.txt",
+        (long) data.length,
+        "text/plain",
+        BinaryContentStatus.SUCCESS
+    );
 
     ResponseEntity<?> response = storage.download(dto);
     assertEquals(HttpStatus.FOUND, response.getStatusCode());

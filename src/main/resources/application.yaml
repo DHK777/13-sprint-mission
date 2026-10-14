@@ -3,6 +3,14 @@ spring:
     name: discodeit
   profiles:
     active: dev
+  cache:
+    type: caffeine
+    cache-names:
+      - channelsByUser
+      - notificationsByUser
+      - users
+    caffeine:
+      spec: maximumSize=100,expireAfterAccess=600s,recordStats
   sql:
     init:
       mode: always
@@ -50,7 +58,10 @@ management:
   endpoints:
     web:
       exposure:
-        include: "health,info,metrics,loggers"
+        include: "health,info,metrics,loggers,caches"
+  observations:
+    annotations:
+      enabled: true
   info:
     env:
       enabled: true

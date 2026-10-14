@@ -48,11 +48,12 @@ public class ReadStatusController {
     return ResponseEntity.ok(readStatusService.findAllByUserId(userId));
   }
 
-  @Operation(summary = "읽음 상태 업데이트 (마지막 읽은 시간 갱신)")
+  @Operation(summary = "읽음 상태 및 알림 설정 수정")
   @PatchMapping("/{statusId}")
   public ResponseEntity<ReadStatusDto> updateReadStatus(
       @PathVariable UUID statusId, @Valid @RequestBody ReadStatusUpdateRequest request) {
-    ReadStatusDto response = readStatusService.update(statusId, request.newLastReadAt());
+    ReadStatusDto response = readStatusService.update(statusId, request.newLastReadAt(),
+        request.newNotificationEnabled());
     return ResponseEntity.ok(response);
   }
 

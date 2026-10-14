@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.sprint.mission.discodeit.dto.UserDto;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.service.UserStatusService;
 import java.util.List;
@@ -39,8 +40,10 @@ class UserControllerTest {
   @DisplayName("getAllUsers - 성공: 유저 목록을 정상적으로 조회")
   void getAllUsers_Success() throws Exception {
     // Given
-    UserDto mockUser1 = new UserDto(UUID.randomUUID(), "tester1", "test1@test.com", null, true);
-    UserDto mockUser2 = new UserDto(UUID.randomUUID(), "tester2", "test2@test.com", null, false);
+    UserDto mockUser1 = new UserDto(UUID.randomUUID(), "tester1", "test1@test.com", null, true,
+        Role.USER);
+    UserDto mockUser2 = new UserDto(UUID.randomUUID(), "tester2", "test2@test.com", null, false,
+        Role.USER);
 
     given(userService.findAllUsers()).willReturn(List.of(mockUser1, mockUser2));
 
