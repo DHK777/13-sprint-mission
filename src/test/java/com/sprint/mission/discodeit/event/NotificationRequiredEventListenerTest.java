@@ -63,7 +63,8 @@ class NotificationRequiredEventListenerTest {
         author.getId(),
         "author",
         "개인 채널",
-        "안녕하세요"
+        "안녕하세요",
+        null
     );
 
     listener.handleMessageCreated(event);
@@ -95,6 +96,7 @@ class NotificationRequiredEventListenerTest {
         UUID.randomUUID(),
         "author",
         "개인 채널",
+        null,
         null
     );
 
