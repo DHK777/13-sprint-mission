@@ -3,7 +3,6 @@ package com.sprint.mission.discodeit.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.dto.JwtDto;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -19,10 +18,9 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
 
-  private static final String REFRESH_TOKEN_COOKIE_NAME = "REFRESH_TOKEN";
-
   private final ObjectMapper objectMapper;
   private final JwtTokenProvider jwtTokenProvider;
+  private final RefreshTokenCookieProvider refreshTokenCookieProvider;
 
   @Override
   @CacheEvict(cacheNames = "users", allEntries = true)
@@ -38,13 +36,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
     String accessToken = jwtTokenProvider.generateAccessToken(userDetails);
     String refreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
 
-    Cookie refreshTokenCookie =
-        new Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken);
-
-    refreshTokenCookie.setHttpOnly(true);
-    refreshTokenCookie.setPath("/");
-
-    response.addCookie(refreshTokenCookie);
+    refreshTokenCookieProvider.addCookie(response, refreshToken);
 
     JwtDto jwtDto = new JwtDto(
         userDetails.getUserDto(),

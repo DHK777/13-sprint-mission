@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -27,7 +28,7 @@ public class BasicNotificationService implements NotificationService {
   private final UserRepository userRepository;
 
   @Override
-  @Transactional
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   @CacheEvict(cacheNames = "notificationsByUser", key = "#receiverId")
   public NotificationDto create(UUID receiverId, String title, String content) {
     User receiver = userRepository.findById(receiverId)

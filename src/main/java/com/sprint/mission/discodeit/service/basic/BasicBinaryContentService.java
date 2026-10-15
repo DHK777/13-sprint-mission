@@ -15,6 +15,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -68,7 +69,7 @@ public class BasicBinaryContentService implements BinaryContentService {
   }
 
   @Override
-  @Transactional
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public BinaryContentDto updateStatus(UUID id, BinaryContentStatus status) {
     BinaryContent content = binaryContentRepository.findById(id)
         .orElseThrow(() -> new BinaryContentNotFoundException(
