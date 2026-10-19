@@ -2,6 +2,8 @@ package com.sprint.mission.discodeit.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.dto.JwtDto;
+import com.sprint.mission.discodeit.dto.UserDto;
+import com.sprint.mission.discodeit.service.UserPresenceService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -21,6 +23,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
   private final ObjectMapper objectMapper;
   private final JwtTokenProvider jwtTokenProvider;
   private final RefreshTokenCookieProvider refreshTokenCookieProvider;
+  private final UserPresenceService userPresenceService;
 
   @Override
   @CacheEvict(cacheNames = "users", allEntries = true)
@@ -32,6 +35,10 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
 
     DiscodeitUserDetails userDetails =
         (DiscodeitUserDetails) authentication.getPrincipal();
+    UserDto userDto = userPresenceService.update(
+        userDetails.getUserDto().id(),
+        true
+    );
 
     String accessToken = jwtTokenProvider.generateAccessToken(userDetails);
     String refreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
@@ -39,7 +46,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
     refreshTokenCookieProvider.addCookie(response, refreshToken);
 
     JwtDto jwtDto = new JwtDto(
-        userDetails.getUserDto(),
+        userDto,
         accessToken
     );
 

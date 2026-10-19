@@ -8,6 +8,7 @@ import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
+import com.sprint.mission.discodeit.event.UserChangedEvent;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.exception.UserAlreadyExistsException;
 import com.sprint.mission.discodeit.exception.UserNotFoundException;
@@ -72,7 +73,7 @@ public class BasicUserService implements UserService {
     userStatusRepository.save(userStatus);
 
     log.info("User 생성 완료 - userId: {}", user.getId());
-    return userMapper.toDto(user);
+    return publishUserEvent("users.created", user);
   }
 
   @Override
@@ -119,7 +120,7 @@ public class BasicUserService implements UserService {
     }
 
     log.info("User 수정 완료 - userId: {}", id);
-    return userMapper.toDto(user);
+    return publishUserEvent("users.updated", user);
   }
 
   @Override
@@ -133,8 +134,15 @@ public class BasicUserService implements UserService {
           return new UserNotFoundException(Map.of("userId", id));
         });
 
+    UserDto userDto = userMapper.toDto(user);
+
     userStatusRepository.deleteByUserId(user.getId());
     userRepository.delete(user);
+
+    eventPublisher.publishEvent(
+        new UserChangedEvent("users.deleted", userDto)
+    );
+
     log.info("User 삭제 완료 - userId: {}", id);
   }
 
@@ -162,7 +170,7 @@ public class BasicUserService implements UserService {
 
     log.info("User 권한 수정 완료 - userId: {}, role: {}", userId, newRole);
 
-    return userMapper.toDto(user);
+    return publishUserEvent("users.updated", user);
   }
 
   private void saveProfileImage(User user, FileUploadDto profile) {
@@ -178,5 +186,15 @@ public class BasicUserService implements UserService {
 
       user.updateProfile(profileImage);
     }
+  }
+
+  private UserDto publishUserEvent(String eventName, User user) {
+    UserDto userDto = userMapper.toDto(user);
+
+    eventPublisher.publishEvent(
+        new UserChangedEvent(eventName, userDto)
+    );
+
+    return userDto;
   }
 }

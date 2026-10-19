@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.security;
 
+import com.sprint.mission.discodeit.service.UserPresenceService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
 public class JwtLogoutHandler implements LogoutHandler {
 
   private final RefreshTokenCookieProvider refreshTokenCookieProvider;
+  private final UserPresenceService userPresenceService;
 
   @Override
   @CacheEvict(cacheNames = "users", allEntries = true)
@@ -22,5 +24,10 @@ public class JwtLogoutHandler implements LogoutHandler {
       Authentication authentication
   ) {
     refreshTokenCookieProvider.clearCookie(response);
+
+    if (authentication != null
+        && authentication.getPrincipal() instanceof DiscodeitUserDetails userDetails) {
+      userPresenceService.update(userDetails.getUserDto().id(), false);
+    }
   }
 }
