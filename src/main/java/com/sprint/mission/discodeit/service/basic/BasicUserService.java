@@ -98,7 +98,7 @@ public class BasicUserService implements UserService {
 
   @Override
   @Transactional
-  @CacheEvict(cacheNames = "users", allEntries = true)
+  @CacheEvict(cacheNames = {"users", "channelsByUser"}, allEntries = true)
   public UserDto update(UUID id, String newEmail, String newUsername, String newPassword,
       String statusMessage, FileUploadDto profile) {
     log.debug("User 수정 요청 - userId: {}", id);
@@ -108,7 +108,11 @@ public class BasicUserService implements UserService {
           return new UserNotFoundException(Map.of("userId", id));
         });
 
-    user.update(newEmail, newUsername, newPassword, statusMessage);
+    String encodedPassword = newPassword == null
+        ? user.getPassword()
+        : passwordEncoder.encode(newPassword);
+
+    user.update(newEmail, newUsername, encodedPassword, statusMessage);
 
     if (profile != null && profile.bytes() != null && profile.bytes().length > 0) {
       saveProfileImage(user, profile);
@@ -125,7 +129,7 @@ public class BasicUserService implements UserService {
 
   @Override
   @Transactional
-  @CacheEvict(cacheNames = "users", allEntries = true)
+  @CacheEvict(cacheNames = {"users", "channelsByUser"}, allEntries = true)
   public void delete(UUID id) {
     log.debug("User 삭제 요청 - userId: {}", id);
     User user = userRepository.findById(id)
@@ -148,7 +152,7 @@ public class BasicUserService implements UserService {
 
   @Override
   @Transactional
-  @CacheEvict(cacheNames = "users", allEntries = true)
+  @CacheEvict(cacheNames = {"users", "channelsByUser"}, allEntries = true)
   @PreAuthorize("hasRole('ADMIN')")
   public UserDto updateRole(UUID userId, Role newRole) {
     log.debug("User 권한 수정 요청 - userId: {}, role: {}", userId, newRole);
